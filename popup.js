@@ -22,7 +22,7 @@ async function checkIfOnFacebook() {
         if (tab?.url?.includes('facebook.com/ads/library')) {
             console.log('[Popup] On Facebook Ads Library page');
         } else {
-            showStatus('⚠️ Please navigate to Facebook Ads Library first', 'warning');
+            showStatus('ℹ️ Scraping only works on Facebook Ads Library. Import works anywhere!', 'warning');
         }
     } catch (error) {
         console.error('[Popup] Error checking tab:', error);
@@ -32,10 +32,6 @@ async function checkIfOnFacebook() {
 async function checkForExistingAnalysis() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
-        if (!tab?.url?.includes('facebook.com')) {
-            return;
-        }
 
         // Check if overlay already exists with data
         chrome.tabs.sendMessage(tab.id, { action: 'checkExisting' }, (response) => {
@@ -43,16 +39,16 @@ async function checkForExistingAnalysis() {
                 console.log('[Popup] No existing analysis found');
                 return;
             }
-            
+
             if (response && response.hasOverlay) {
                 console.log('[Popup] Found existing analysis');
                 const reopenBtn = document.getElementById('reopenBtn');
                 const description = document.getElementById('description');
                 const startBtn = document.getElementById('startBtn');
-                
+
                 reopenBtn.style.display = 'block';
                 description.textContent = 'Last analysis available! Reopen or start fresh.';
-                
+
                 // Make Start Analysis button secondary style when reopen is available
                 startBtn.classList.remove('btn-primary');
                 startBtn.classList.add('btn-secondary');
@@ -129,33 +125,28 @@ async function importData(e) {
     reader.onload = async (event) => {
         try {
             const data = JSON.parse(event.target.result);
-            
+
             if (!data.campaigns || !Array.isArray(data.campaigns)) {
                 showStatus('❌ Invalid data format. Expected campaigns array.', 'error');
                 return;
             }
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
-            if (!tab?.url?.includes('facebook.com')) {
-                showStatus('❌ Please open Facebook Ads Library first', 'error');
-                return;
-            }
 
             showStatus(`✅ Loading ${data.campaigns.length} campaigns...`, 'success');
 
             // Send message to inject visualizer and load data
-            chrome.tabs.sendMessage(tab.id, { 
+            chrome.tabs.sendMessage(tab.id, {
                 action: 'loadData',
                 data: data
             }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.error('[Popup] Error:', chrome.runtime.lastError);
-                    showStatus('❌ Error: Refresh the Facebook page and try again', 'error');
+                    showStatus('❌ Error: Refresh the page and try again', 'error');
                     return;
                 }
                 console.log('[Popup] Data loaded:', response);
-                
+
                 // Close popup after a delay
                 setTimeout(() => {
                     window.close();
@@ -167,7 +158,7 @@ async function importData(e) {
         }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     e.target.value = '';
 }
