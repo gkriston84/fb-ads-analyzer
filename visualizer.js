@@ -636,7 +636,13 @@
       </div>
     `;
 
-    row.addEventListener('click', () => showModal(campaign));
+    row.addEventListener('click', (e) => {
+      // Don't open modal if an anchor tag was clicked
+      if (e.target.tagName === 'A' || e.target.closest('a')) {
+        return;
+      }
+      showModal(campaign);
+    });
     return row;
   }
 
