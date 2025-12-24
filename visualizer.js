@@ -763,8 +763,9 @@
   }
 
   // Initialize
+  const overlayExists = !!document.getElementById('fbAdsAnalyzerOverlay');
   createOverlay();
-  
+
   // Check for imported data in DOM
   const dataContainer = document.getElementById('fbAdsImportedData');
   if (dataContainer) {
@@ -780,6 +781,13 @@
     }
   } else {
     // Scraping mode - show status bar and update subtitle
+    if (overlayExists) {
+      // Overlay already exists (second run) - make sure it's visible
+      console.log('[FB Ads Visualizer] Overlay already exists, showing it for new scraping session');
+      showOverlay();
+      state.isAnalyzing = true;
+      minimize(); // Start minimized for scraping
+    }
     document.getElementById('fbAdsSubtitle').textContent = 'Scraping in progress...';
     showStatus('🔄 Auto-scrolling and extracting ad data...');
   }
