@@ -624,7 +624,7 @@
     
     row.innerHTML = `
       <div class="fb-ads-campaign-info">
-        <div class="fb-ads-campaign-url" title="${campaign.url}"><a onclick="arguments[0].stopPropagation();" href="https://${campaign.url}" target="_blank">${campaign.url}</div>
+        <div class="fb-ads-campaign-url" title="${campaign.url}"><a onclick="arguments[0].stopPropagation();" href="https://${campaign.url}" target="_blank">${campaign.url}</a></div>
         <a onclick="arguments[0].stopPropagation();" href="https://web.archive.org/web/*/https://${campaign.url}/*" target="_blank">Archived versions</a>
         <div class="fb-ads-campaign-meta">${campaign.campaignDurationDays} days • ${campaign.adsUsingUrl} ads</div>
       </div>
