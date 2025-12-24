@@ -26,25 +26,27 @@
   },
   "content_scripts": [
     {
+      "js": [
+        "assets/content.js-WPU6hEMy.js"
+      ],
       "matches": [
         "<all_urls>"
-      ],
-      "js": [
-        "src/content.js"
       ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
+      "matches": [
+        "<all_urls>"
+      ],
       "resources": [
         "src/injected.js",
         "src/visualizer.js",
-        "src/visualizer.css"
+        "src/visualizer.css",
+        "assets/content.js-WPU6hEMy.js"
       ],
-      "matches": [
-        "<all_urls>"
-      ]
+      "use_dynamic_url": false
     }
   ]
 }

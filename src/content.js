@@ -35,16 +35,16 @@ function injectScraperAndVisualizer() {
 
   // Inject the scraper
   const scraperScript = document.createElement('script');
-  scraperScript.src = chrome.runtime.getURL('injected.js');
-  scraperScript.onload = function() {
+  scraperScript.src = chrome.runtime.getURL('src/injected.js');
+  scraperScript.onload = function () {
     this.remove();
   };
   (document.head || document.documentElement).appendChild(scraperScript);
 
   // Inject the visualizer
   const visualizerScript = document.createElement('script');
-  visualizerScript.src = chrome.runtime.getURL('visualizer.js');
-  visualizerScript.onload = function() {
+  visualizerScript.src = chrome.runtime.getURL('src/visualizer.js');
+  visualizerScript.onload = function () {
     this.remove();
   };
   (document.head || document.documentElement).appendChild(visualizerScript);
@@ -52,7 +52,7 @@ function injectScraperAndVisualizer() {
   // Inject styles
   const styleLink = document.createElement('link');
   styleLink.rel = 'stylesheet';
-  styleLink.href = chrome.runtime.getURL('visualizer.css');
+  styleLink.href = chrome.runtime.getURL('src/visualizer.css');
   (document.head || document.documentElement).appendChild(styleLink);
 }
 
@@ -60,7 +60,7 @@ function injectScraperAndVisualizer() {
 function injectVisualizerWithData(data) {
   // Check if visualizer already exists
   const existingOverlay = document.getElementById('fbAdsAnalyzerOverlay');
-  
+
   if (existingOverlay) {
     // Visualizer already exists, send data via CustomEvent
     console.log('[FB Ads Analyzer] Visualizer exists, sending data via CustomEvent');
@@ -78,8 +78,8 @@ function injectVisualizerWithData(data) {
 
   // Inject the visualizer
   const visualizerScript = document.createElement('script');
-  visualizerScript.src = chrome.runtime.getURL('visualizer.js');
-  visualizerScript.onload = function() {
+  visualizerScript.src = chrome.runtime.getURL('src/visualizer.js');
+  visualizerScript.onload = function () {
     this.remove();
   };
   (document.head || document.documentElement).appendChild(visualizerScript);
@@ -88,7 +88,7 @@ function injectVisualizerWithData(data) {
   if (!document.querySelector('link[href*="visualizer.css"]')) {
     const styleLink = document.createElement('link');
     styleLink.rel = 'stylesheet';
-    styleLink.href = chrome.runtime.getURL('visualizer.css');
+    styleLink.href = chrome.runtime.getURL('src/visualizer.css');
     (document.head || document.documentElement).appendChild(styleLink);
   }
 }

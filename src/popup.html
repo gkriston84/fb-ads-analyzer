@@ -179,62 +179,93 @@
             flex-shrink: 0;
             margin-top: 2px;
         }
+        .auth-box {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .error-text {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎯 FB Ads Analyzer</h1>
-            <p>Campaign Timeline Visualizer</p>
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-box">
+            <div class="header" style="border-radius: 12px; margin-bottom: 24px;">
+                <h1>FB Ads Analyzer</h1>
+                <p>Login to continue</p>
+            </div>
+            
+            <div id="loginForm">
+                <input type="email" id="emailInput" placeholder="Email" class="input-field" />
+                <input type="password" id="passwordInput" placeholder="Password" class="input-field" />
+                <button id="loginBtn" class="btn btn-primary" style="margin-bottom: 8px;">Login</button>
+                <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
+                <div id="authError" class="error-text"></div>
+            </div>
+
+            <div id="userProfile" style="display: none;">
+                <p style="margin-bottom: 16px; color: #374151;">Logged in as <br><strong id="userEmail"></strong></p>
+                <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
+            </div>
         </div>
 
-        <div class="content">
-            <div class="icon">📊</div>
-            <div class="title">Analyze Facebook Ads</div>
-            <div class="description" id="description">
-                Start a new analysis or load previously exported data
+        <!-- Main Content (Hidden by default) -->
+        <div id="mainContent" style="display: none;">
+            <div class="header">
+                <h1>🎯 FB Ads Analyzer</h1>
+                <p>Campaign Timeline Visualizer</p>
             </div>
 
-            <button class="btn btn-primary" id="startBtn">
-                🚀 Start Analysis
-            </button>
-
-            <button class="btn btn-success" id="reopenBtn" style="display: none;">
-                📂 Reopen Last Analysis
-            </button>
-
-            <div style="margin-top: 12px; text-align: center; color: #9ca3af; font-size: 12px;" id="orDivider">
-                or
-            </div>
-
-            <button class="btn btn-secondary" id="importBtn">
-                📁 Import JSON Data
-            </button>
-            <input type="file" id="fileInput" accept=".json" style="display: none;">
-
-            <div class="status" id="status"></div>
-
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <div>Auto-scrolls and extracts all ads</div>
+            <div class="content">
+                <div class="icon">📊</div>
+                <div class="title">Analyze Facebook Ads</div>
+                <div class="description" id="description">
+                    Start a new analysis or load previously exported data
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">📈</div>
-                    <div>Interactive timeline visualization</div>
+
+                <button class="btn btn-primary" id="startBtn">
+                    🚀 Start Analysis
+                </button>
+
+                <button class="btn btn-success" id="reopenBtn" style="display: none;">
+                    📂 Reopen Last Analysis
+                </button>
+
+                <div style="margin-top: 12px; text-align: center; color: #9ca3af; font-size: 12px;" id="orDivider">
+                    or
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">🎯</div>
-                    <div>Shows top 5 ads per campaign</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">💾</div>
-                    <div>Download & import JSON data</div>
+
+                <button class="btn btn-secondary" id="importBtn">
+                    📁 Import JSON Data
+                </button>
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+                <div class="status" id="status"></div>
+
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">⚡</div>
+                        <div>Auto-scrolls and extracts all ads</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
 </body>
 </html>

@@ -1,11 +1,85 @@
-// Simplified popup script - just triggers the analysis
+import { auth } from './firebaseConfig.js';
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from 'firebase/auth';
+
 console.log('[Popup] Loaded');
 
+// DOM Elements
+const authSection = document.getElementById('authSection');
+const loginForm = document.getElementById('loginForm');
+const userProfile = document.getElementById('userProfile');
+const userEmailSpan = document.getElementById('userEmail');
+const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
+const authError = document.getElementById('authError');
+const mainContent = document.getElementById('mainContent');
+
+// Auth State Listener
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is signed in
+        showMainContent(user);
+    } else {
+        // No user is signed in
+        showAuthForm();
+    }
+});
+
+function showMainContent(user) {
+    loginForm.style.display = 'none';
+    userProfile.style.display = 'block';
+    userEmailSpan.textContent = user.email;
+    mainContent.style.display = 'block';
+}
+
+function showAuthForm() {
+    loginForm.style.display = 'block';
+    userProfile.style.display = 'none';
+    mainContent.style.display = 'none';
+    emailInput.value = '';
+    passwordInput.value = '';
+    authError.textContent = '';
+}
+
+// Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    checkIfOnFacebook();
-    checkForExistingAnalysis();
+    setupAuthListeners();
 });
+
+function setupAuthListeners() {
+    document.getElementById('loginBtn')?.addEventListener('click', async () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            authError.textContent = error.message;
+        }
+    });
+
+    document.getElementById('signupBtn')?.addEventListener('click', async () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            authError.textContent = error.message;
+        }
+    });
+
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
+    });
+}
 
 function setupEventListeners() {
     document.getElementById('startBtn')?.addEventListener('click', startAnalysis);
@@ -15,6 +89,9 @@ function setupEventListeners() {
     });
     document.getElementById('fileInput')?.addEventListener('change', importData);
 }
+
+// ... Reused functions from original popup.js ...
+// Copying original logic here but adapting to not run immediately on load since we wrap in DOMContentLoaded
 
 async function checkIfOnFacebook() {
     try {
@@ -63,7 +140,7 @@ async function checkForExistingAnalysis() {
 async function reopenAnalysis() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
+
         showStatus('✅ Reopening analysis...', 'success');
 
         chrome.tabs.sendMessage(tab.id, { action: 'reopenOverlay' }, (response) => {
@@ -73,7 +150,7 @@ async function reopenAnalysis() {
                 return;
             }
             console.log('[Popup] Overlay reopened:', response);
-            
+
             setTimeout(() => {
                 window.close();
             }, 500);
@@ -88,7 +165,7 @@ async function reopenAnalysis() {
 async function startAnalysis() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
+
         if (!tab?.url?.includes('facebook.com')) {
             showStatus('❌ Please open Facebook Ads Library', 'error');
             return;
@@ -104,7 +181,7 @@ async function startAnalysis() {
                 return;
             }
             console.log('[Popup] Scraping started:', response);
-            
+
             // Close popup after a delay
             setTimeout(() => {
                 window.close();
@@ -168,3 +245,16 @@ function showStatus(text, type) {
     status.textContent = text;
     status.className = 'status show ' + type;
 }
+
+// Call init functions only when logged in
+function initApp() {
+    checkIfOnFacebook();
+    checkForExistingAnalysis();
+}
+
+// Hook initApp into showMainContent
+const originalShowMainContent = showMainContent;
+showMainContent = function (user) {
+    originalShowMainContent(user);
+    initApp();
+};
