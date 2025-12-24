@@ -1,5 +1,5 @@
 // Visualizer - creates floating overlay on Facebook page
-(function() {
+(function () {
   console.log('[FB Ads Visualizer] Loaded');
 
   let state = {
@@ -62,7 +62,6 @@
           <div class="fb-ads-control-group">
             <span style="font-size: 12px; font-weight: 500; color: #374151;">View:</span>
             <button class="fb-ads-btn fb-ads-btn-outline active" data-view="timeline">📊 Timeline</button>
-            <button class="fb-ads-btn fb-ads-btn-outline" data-view="all-copy">📝 All Copy</button>
             <button class="fb-ads-btn fb-ads-btn-outline" data-view="top5-text">🏆 Top 5 Text</button>
           </div>
           
@@ -133,7 +132,7 @@
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(overlay);
     setupEventListeners();
   }
@@ -197,6 +196,30 @@
     document.getElementById('fbAdsModalOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'fbAdsModalOverlay') closeModal();
     });
+
+    // Copy to clipboard delegation
+    const modalBody = document.getElementById('fbAdsModalBody');
+    if (modalBody) {
+      modalBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.fb-ads-copy-btn');
+        if (btn && btn.dataset.copyText) {
+          const text = decodeURIComponent(btn.dataset.copyText);
+          if (!text) return;
+
+          navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            btn.classList.add('success');
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+              btn.classList.remove('success');
+            }, 2000);
+          }).catch(err => {
+            console.error('Failed to copy:', err);
+          });
+        }
+      });
+    }
   }
 
   function minimize() {
@@ -229,17 +252,17 @@
       alert('Analysis already in progress. Please wait for it to complete.');
       return;
     }
-    
+
     // Clear existing data
     state.rawCampaigns = [];
     state.allAds = [];
-    
+
     // Show analyzing state
     state.isAnalyzing = true;
     document.getElementById('fbAdsSubtitle').textContent = 'Scraping in progress...';
     showStatus('🔄 Restarting analysis...');
     minimize();
-    
+
     // Trigger new analysis
     if (window.fbAdsAnalyzer && window.fbAdsAnalyzer.runFullAnalysis) {
       window.fbAdsAnalyzer.runFullAnalysis();
@@ -256,19 +279,19 @@
       exportedAt: new Date().toISOString(),
       version: '2.0'
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const query = document.querySelector('input[placeholder*="Search by"]').value.toLowerCase().replaceAll(' ', '-');
-    const range = document.getElementById('fbAdsSubtitle').innerText.toLowerCase().replaceAll(',','').replaceAll(' ', '-')
-;
+    const range = document.getElementById('fbAdsSubtitle').innerText.toLowerCase().replaceAll(',', '').replaceAll(' ', '-')
+      ;
 
     a.href = url;
     a.download = `${query}-fb-ads-${range}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     showStatus('✅ Data downloaded successfully!');
     setTimeout(hideStatus, 2000);
   }
@@ -281,11 +304,11 @@
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        
+
         if (data.campaigns && Array.isArray(data.campaigns)) {
           state.rawCampaigns = data.campaigns;
           state.allAds = data.allAds || [];
-          
+
           showStatus(`✅ Imported ${state.rawCampaigns.length} campaigns!`);
           setTimeout(hideStatus, 2000);
           showControls();
@@ -299,7 +322,7 @@
       }
     };
     reader.readAsText(file);
-    
+
     // Reset file input
     e.target.value = '';
   }
@@ -308,7 +331,7 @@
     document.getElementById('fbAdsStatusText').textContent = text;
     document.getElementById('fbAdsStatusBar').style.display = 'flex';
     document.getElementById('fbAdsMinimizedText').textContent = text;
-    
+
     const isLoading = text.includes('...') || text.includes('🔄');
     document.getElementById('fbAdsMinimizedSpinner').style.display = isLoading ? 'block' : 'none';
   }
@@ -324,15 +347,11 @@
   function renderCurrentView() {
     const sortGroup = document.getElementById('fbAdsSortGroup');
     const legend = document.getElementById('fbAdsLegend');
-    
+
     if (state.currentView === 'timeline') {
       sortGroup.style.display = 'flex';
       legend.style.display = 'flex';
       renderChart();
-    } else if (state.currentView === 'all-copy') {
-      sortGroup.style.display = 'none';
-      legend.style.display = 'none';
-      renderAllCopy();
     } else if (state.currentView === 'top5-text') {
       sortGroup.style.display = 'none';
       legend.style.display = 'none';
@@ -340,77 +359,24 @@
     }
   }
 
-  function renderAllCopy() {
-    const chartContent = document.getElementById('fbAdsChartContent');
-    
-    if (!state.allAds || state.allAds.length === 0) {
-      chartContent.innerHTML = '<div class="fb-ads-empty-state">No ad copy data available</div>';
-      return;
-    }
 
-    // Extract unique ad copy
-    const seen = new Set();
-    const uniqueCopy = [];
-    
-    state.allAds.forEach(ad => {
-      const text = ad.adText?.trim();
-      if (text && !seen.has(text)) {
-        seen.add(text);
-        uniqueCopy.push({
-          text,
-          libraryId: ad.libraryId,
-          duration: ad.duration,
-          startingDate: ad.startingDate,
-          endDate: ad.endDate
-        });
-      }
-    });
-
-    // Sort by duration (longest first)
-    uniqueCopy.sort((a, b) => b.duration - a.duration);
-
-    document.getElementById('fbAdsSubtitle').textContent = 
-      `${uniqueCopy.length} unique ad copies`;
-
-    chartContent.innerHTML = `
-      <div class="fb-ads-copy-list">
-        ${uniqueCopy.map((ad, idx) => `
-          <div class="fb-ads-copy-item">
-            <div class="fb-ads-copy-header">
-              <span class="fb-ads-copy-number">#${idx + 1}</span>
-              <div class="fb-ads-copy-meta">
-                <a href="https://www.facebook.com/ads/library/?id=${ad.libraryId}" 
-                   target="_blank" 
-                   class="fb-ads-library-id-link">
-                  Library ID: ${ad.libraryId}
-                </a>
-                <span class="fb-ads-copy-duration">${ad.duration} days</span>
-              </div>
-            </div>
-            <div class="fb-ads-copy-text">${ad.text}</div>
-            <div class="fb-ads-copy-dates">${ad.startingDate} → ${ad.endDate}</div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
 
   function renderTop5Text() {
     const chartContent = document.getElementById('fbAdsChartContent');
-    
+
     if (!state.rawCampaigns || state.rawCampaigns.length === 0) {
       chartContent.innerHTML = '<div class="fb-ads-empty-state">No campaign data available</div>';
       return;
     }
 
-    document.getElementById('fbAdsSubtitle').textContent = 
+    document.getElementById('fbAdsSubtitle').textContent =
       `Top 5 ads for ${state.rawCampaigns.length} campaigns`;
 
     let output = '';
-    
+
     state.rawCampaigns.forEach(campaign => {
       const formatDate = (dateStr) => new Date(dateStr).toDateString();
-      
+
       output += `
         <div class="fb-ads-text-campaign">
           <div class="fb-ads-text-header">
@@ -451,7 +417,39 @@
       `;
     });
 
-    chartContent.innerHTML = `<div class="fb-ads-text-output">${output}</div>`;
+    chartContent.innerHTML = `
+      <div class="fb-ads-text-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+        <button id="fbAdsCopyAllTextBtn" class="fb-ads-btn fb-ads-btn-action">
+          📋 Copy All Text
+        </button>
+      </div>
+      <div class="fb-ads-text-output">${output}</div>
+    `;
+
+    // Add event listener for Copy All
+    document.getElementById('fbAdsCopyAllTextBtn')?.addEventListener('click', () => {
+      const allText = state.rawCampaigns.map(campaign => {
+        let text = `Campaign: ${campaign.url}\nDates: ${formatDate(campaign.firstAdvertised)} - ${formatDate(campaign.lastAdvertised)}\n\n`;
+
+        if (campaign.top5 && campaign.top5.length > 0) {
+          text += campaign.top5.map((ad, idx) => {
+            return `Ad #${idx + 1} (Duration: ${ad.duration} days)\n${ad.adText || '[No copy]'}\n`;
+          }).join('\n---\n\n');
+        } else {
+          text += '[No top ads data]\n';
+        }
+        return text;
+      }).join('\n==========================================\n\n');
+
+      navigator.clipboard.writeText(allText).then(() => {
+        const btn = document.getElementById('fbAdsCopyAllTextBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Copied All!';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      });
+    });
   }
 
   // Utility functions
@@ -526,7 +524,7 @@
     const end = new Date(campaign.lastAdvertised);
     const startOffset = Math.ceil((start - minDate) / (1000 * 60 * 60 * 24));
     const duration = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    
+
     return {
       left: `${(startOffset / totalDays) * 100}%`,
       width: `${(duration / totalDays) * 100}%`
@@ -537,7 +535,7 @@
     const markers = [];
     let current = new Date(minDate);
     current.setDate(1);
-    
+
     while (current <= maxDate) {
       const offset = Math.ceil((current - minDate) / (1000 * 60 * 60 * 24));
       markers.push({
@@ -560,7 +558,7 @@
     const monthMarkers = getMonthMarkers(minDate, maxDate, totalDays);
 
     // Update subtitle
-    document.getElementById('fbAdsSubtitle').textContent = 
+    document.getElementById('fbAdsSubtitle').textContent =
       `${campaigns.length} campaigns from ${formatDate(minDate)} to ${formatDate(maxDate)}`;
 
     const chartContent = document.getElementById('fbAdsChartContent');
@@ -589,7 +587,7 @@
       sortedDomains.forEach(domain => {
         const domainCampaigns = groups[domain];
         const totalAds = domainCampaigns.reduce((sum, c) => sum + c.adsUsingUrl, 0);
-        
+
         const domainGroup = document.createElement('div');
         domainGroup.className = 'fb-ads-domain-group';
         domainGroup.innerHTML = `
@@ -600,11 +598,11 @@
             </div>
           </div>
         `;
-        
+
         domainCampaigns.forEach(campaign => {
           domainGroup.appendChild(createCampaignRow(campaign, minDate, maxDate, totalDays, monthMarkers));
         });
-        
+
         chartContent.appendChild(domainGroup);
       });
     } else {
@@ -618,10 +616,10 @@
   function createCampaignRow(campaign, minDate, maxDate, totalDays, monthMarkers) {
     const row = document.createElement('div');
     row.className = 'fb-ads-campaign-row';
-    
+
     const barPos = getBarPosition(campaign, minDate, totalDays);
     const color = getColor(campaign.adsUsingUrl);
-    
+
     row.innerHTML = `
       <div class="fb-ads-campaign-info">
         <div class="fb-ads-campaign-url" title="${campaign.url}"><a onclick="arguments[0].stopPropagation();" href="https://${campaign.url}" target="_blank">${campaign.url}</a></div>
@@ -649,7 +647,7 @@
   function showModal(campaign) {
     const modal = document.getElementById('fbAdsModalOverlay');
     const modalBody = document.getElementById('fbAdsModalBody');
-    
+
     document.getElementById('fbAdsModalUrl').textContent = campaign.url;
     document.getElementById('fbAdsModalMeta').innerHTML = `
       <div>${formatDate(campaign.firstAdvertised)} → ${formatDate(campaign.lastAdvertised)}</div>
@@ -658,7 +656,12 @@
 
     if (campaign.top5 && campaign.top5.length > 0) {
       modalBody.innerHTML = `
-        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #111827;">Top Performing Ads</h3>
+        <div class="fb-ads-modal-section-header">
+          <h3 style="font-size: 16px; font-weight: 600; margin: 0; color: #111827;">Top Performing Ads</h3>
+          <button id="fbAdsModalCopyAllBtn" class="fb-ads-copy-btn">
+            📋 Copy All Ads
+          </button>
+        </div>
         <div class="fb-ads-list">
           ${campaign.top5.map((ad, idx) => `
             <div class="fb-ads-card">
@@ -680,7 +683,12 @@
                 </div>
               </div>
               <div class="fb-ads-ad-copy-section">
-                <div class="fb-ads-ad-copy-label">Ad Copy</div>
+                <div class="fb-ads-ad-copy-header">
+                  <div class="fb-ads-ad-copy-label">Ad Copy</div>
+                  <button class="fb-ads-copy-btn" data-copy-text="${encodeURIComponent(ad.adText || '')}">
+                    📋 Copy
+                  </button>
+                </div>
                 <div class="fb-ads-ad-copy">${ad.adText || '[No copy available]'}</div>
               </div>
             </div>
@@ -697,6 +705,26 @@
     }
 
     modal.style.display = 'flex';
+
+    // Event listener for Modal Copy All
+    const copyAllBtn = document.getElementById('fbAdsModalCopyAllBtn');
+    if (copyAllBtn) {
+      copyAllBtn.addEventListener('click', () => {
+        const allAdsText = campaign.top5.map((ad, idx) => {
+          return `Ad #${idx + 1} (Duration: ${ad.duration} days)\n${ad.adText || '[No copy]'}`;
+        }).join('\n\n---\n\n');
+
+        navigator.clipboard.writeText(allAdsText).then(() => {
+          const originalText = copyAllBtn.innerHTML;
+          copyAllBtn.innerHTML = '✅ Copied All!';
+          copyAllBtn.classList.add('success');
+          setTimeout(() => {
+            copyAllBtn.innerHTML = originalText;
+            copyAllBtn.classList.remove('success');
+          }, 2000);
+        });
+      });
+    }
   }
 
   function closeModal() {
@@ -712,12 +740,13 @@
       state.rawCampaigns = event.data.data || [];
       state.allAds = event.data.allAds || [];
       state.isAnalyzing = false;
-      
+
       if (state.rawCampaigns.length > 0) {
         showStatus(`✅ Found ${state.rawCampaigns.length} campaigns!`);
         setTimeout(hideStatus, 2000);
         showControls();
         maximize();
+        showOverlay()
         renderCurrentView();
       } else {
         showStatus('⚠️ No campaigns found. Try different search criteria.');
@@ -747,13 +776,14 @@
     state.rawCampaigns = importedData.campaigns || [];
     state.allAds = importedData.allAds || [];
     state.isAnalyzing = false;
-    
+
     if (state.rawCampaigns.length > 0) {
       hideStatus(); // Hide status immediately for imports
       showControls();
       maximize();
+      showOverlay(); // Ensure it's visible if previously closed
       renderCurrentView();
-      
+
       // Show brief success message
       showStatus(`✅ Imported ${state.rawCampaigns.length} campaigns!`);
       setTimeout(hideStatus, 2000);
