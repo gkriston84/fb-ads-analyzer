@@ -174,26 +174,7 @@ async function startAnalysis() {
         showStatus('✅ Analysis started! Check the Facebook page...', 'success');
 
         // Fetch AI settings from Firestore
-        let aiConfig = null;
-        try {
-            console.log('[Popup] Fetching AI settings. Auth User:', auth.currentUser ? auth.currentUser.uid : 'null');
-            const { db } = await import('./firebaseConfig.js');
-            const { doc, getDoc } = await import('firebase/firestore');
-            const docRef = doc(db, "settings", "config");
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                aiConfig = docSnap.data();
-                console.log('[Popup] ✅ Successfully fetched AI settings:', {
-                    hasApiKey: !!aiConfig.apiKey,
-                    hasPrompt: !!aiConfig.systemPrompt
-                });
-            } else {
-                console.warn('[Popup] ⚠️ No AI settings found in Firestore (settings/config). AI features will be disabled.');
-            }
-        } catch (err) {
-            console.error('[Popup] ❌ Error fetching AI settings:', err);
-        }
+        const aiConfig = await fetchAIConfig();
 
         // Send message to content script to start scraping and show visualizer
         chrome.tabs.sendMessage(tab.id, {
@@ -233,6 +214,12 @@ async function importData(event) {
                 return;
             }
 
+            if (!json.campaigns) {
+                showStatus('❌ Invalid file format (missing campaigns)', 'error');
+                return;
+            }
+
+            const aiConfig = await fetchAIConfig();
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
             // Check if we are on a valid page (technically import can work anywhere if we inject, 
@@ -244,9 +231,11 @@ async function importData(event) {
 
             // Ensure visualizer is injected first?
             // Sending message 'importData' to content script
+            // Sending message 'importData' to content script
             chrome.tabs.sendMessage(tab.id, {
                 action: 'importData',
-                data: json
+                data: json,
+                aiConfig: aiConfig
             }, (response) => {
                 if (chrome.runtime.lastError) {
                     showStatus('❌ Error: Refresh the page and try again', 'error');
@@ -268,6 +257,26 @@ async function importData(event) {
 
     // Reset file input
     event.target.value = '';
+}
+
+async function fetchAIConfig() {
+    let aiConfig = null;
+    try {
+        console.log('[Popup] Fetching AI settings. Auth User:', auth.currentUser ? auth.currentUser.uid : 'null');
+        const { db } = await import('./firebaseConfig.js');
+        const { doc, getDoc } = await import('firebase/firestore');
+        const docRef = doc(db, "settings", "config");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            aiConfig = docSnap.data();
+        } else {
+            console.warn('[Popup] ⚠️ No AI settings found.');
+        }
+    } catch (err) {
+        console.error('[Popup] ❌ Error fetching AI settings:', err);
+    }
+    return aiConfig;
 }
 
 function showStatus(text, type) {

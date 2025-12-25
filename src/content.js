@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: 'started' });
   } else if (request.action === 'loadData' || request.action === 'importData') {
     console.log('[FB Ads Analyzer] Loading imported data');
-    injectVisualizerWithData(request.data);
+    injectVisualizerWithData(request.data, request.aiConfig);
     sendResponse({ status: 'loaded' });
   } else if (request.action === 'checkExisting') {
     console.log('[FB Ads Analyzer] Checking for existing overlay');
@@ -95,15 +95,22 @@ function injectScraperAndVisualizer(aiConfig) {
 }
 
 // Inject visualizer and send imported data
-function injectVisualizerWithData(data) {
+function injectVisualizerWithData(data, aiConfig) {
   // Check if visualizer already exists
   const existingOverlay = document.getElementById('fbAdsAnalyzerOverlay');
 
   if (existingOverlay) {
     // Visualizer already exists, send data via CustomEvent
     console.log('[FB Ads Analyzer] Visualizer exists, sending data via CustomEvent');
-    const event = new CustomEvent('fbAdsImportData', { detail: data });
+    const event = new CustomEvent('fbAdsImportData', { detail: { ...data, isImported: true } });
     document.dispatchEvent(event);
+
+    if (aiConfig) {
+      setTimeout(() => {
+        const configEvent = new CustomEvent('fbAdsConfig', { detail: aiConfig });
+        document.dispatchEvent(configEvent);
+      }, 200);
+    }
     return;
   }
 
@@ -111,7 +118,7 @@ function injectVisualizerWithData(data) {
   const dataContainer = document.createElement('div');
   dataContainer.id = 'fbAdsImportedData';
   dataContainer.style.display = 'none';
-  dataContainer.textContent = JSON.stringify(data);
+  dataContainer.textContent = JSON.stringify({ ...data, isImported: true });
   document.body.appendChild(dataContainer);
 
   // Inject the visualizer
@@ -128,5 +135,13 @@ function injectVisualizerWithData(data) {
     styleLink.rel = 'stylesheet';
     styleLink.href = chrome.runtime.getURL('src/visualizer.css');
     (document.head || document.documentElement).appendChild(styleLink);
+  }
+
+  // Send AI Config if available
+  if (aiConfig) {
+    setTimeout(() => {
+      const event = new CustomEvent('fbAdsConfig', { detail: aiConfig });
+      document.dispatchEvent(event);
+    }, 500);
   }
 }

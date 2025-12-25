@@ -19,7 +19,8 @@
     isAnalyzing: false,
     aiConfig: null,
     metadata: null,
-    sortDirection: 'asc' // 'asc' or 'desc'
+    sortDirection: 'asc', // 'asc' or 'desc'
+    isImported: false
   };
 
   // Color Helper
@@ -656,9 +657,7 @@
     // Restore AI Result if exists
     const resultDiv = document.getElementById('fbAdsAIResult');
     if (state.aiAnalysisResult) {
-      // Markdown conversion simple replacement for bold/newlines
-      // Ensure consistency with analyzeWithAI formatting
-      resultDiv.innerHTML = `<strong>🤖 AI Analysis (Saved):</strong><br><br>${state.aiAnalysisResult}`;
+      resultDiv.innerHTML = `<strong>🤖 AI Analysis:</strong><br><br>${state.aiAnalysisResult}`;
       resultDiv.style.display = 'block';
     }
 
@@ -795,7 +794,8 @@
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       campaigns: state.rawCampaigns,
       allAds: state.allAds,
-      metadata: state.metadata || { advertiserName: advertiser } // Fallback metadata
+      metadata: state.metadata || { advertiserName: advertiser }, // Fallback metadata
+      aiAnalysisResult: state.aiAnalysisResult || null
     }, null, 2));
 
     const downloadAnchorNode = document.createElement('a');
@@ -827,6 +827,16 @@
     state.rawCampaigns = importedData.campaigns || [];
     state.allAds = importedData.allAds || [];
     state.metadata = importedData.metadata || null;
+    state.isImported = !!importedData.isImported;
+    state.aiAnalysisResult = importedData.aiAnalysisResult || null;
+
+    // Hide Download Button if imported
+    const downloadBtn = document.getElementById('fbAdsDownloadBtn');
+    if (state.isImported) {
+      downloadBtn.style.display = 'none';
+    } else {
+      downloadBtn.style.display = 'inline-flex';
+    }
 
     // Parse dates
     state.rawCampaigns.forEach(c => {
@@ -957,6 +967,7 @@
   document.addEventListener('fbAdsConfig', (event) => {
     console.log('[FB Ads Visualizer] Received AI Config');
     state.aiConfig = event.detail;
+    updateView(); // Re-render to show AI button if needed
   });
 
   // Listen for Scraping Status
