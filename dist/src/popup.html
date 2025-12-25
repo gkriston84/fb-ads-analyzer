@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -179,6 +180,7 @@
             flex-shrink: 0;
             margin-top: 2px;
         }
+
         .auth-box {
             padding: 24px;
             text-align: center;
@@ -201,15 +203,19 @@
     </style>
   <script type="module" crossorigin src="/assets/popup-BJXvhGf_.js"></script>
 </head>
+
 <body>
     <div class="container">
+        <!-- Common Header -->
+        <div class="header">
+            <h1>🎯 FB Ads Analyzer</h1>
+            <p>Campaign Timeline Visualizer</p>
+        </div>
+
         <!-- Auth Section -->
         <div id="authSection" class="auth-box">
-            <div class="header" style="border-radius: 12px; margin-bottom: 24px;">
-                <h1>FB Ads Analyzer</h1>
-                <p>Login to continue</p>
-            </div>
-            
+
+
             <div id="loginForm">
                 <input type="email" id="emailInput" placeholder="Email" class="input-field" />
                 <input type="password" id="passwordInput" placeholder="Password" class="input-field" />
@@ -220,16 +226,12 @@
 
             <div id="userProfile" style="display: none;">
                 <p style="margin-bottom: 16px; color: #374151;">Logged in as <br><strong id="userEmail"></strong></p>
-                <button id="logoutBtn" class="btn btn-secondary btn-small">Logout</button>
             </div>
         </div>
 
         <!-- Main Content (Hidden by default) -->
         <div id="mainContent" style="display: none;">
-            <div class="header">
-                <h1>🎯 FB Ads Analyzer</h1>
-                <p>Campaign Timeline Visualizer</p>
-            </div>
+
 
             <div class="content">
                 <div class="icon">📊</div>
@@ -263,9 +265,12 @@
                         <div>Auto-scrolls and extracts all ads</div>
                     </div>
                 </div>
+
+                <button id="logoutBtn" class="btn btn-secondary btn-small" style="margin-top: 16px;">Logout</button>
             </div>
         </div>
     </div>
 
 </body>
+
 </html>
