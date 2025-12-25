@@ -1,7 +1,7 @@
 // Injected script - runs in page context with full DOM access
-(function() {
+(function () {
   console.log('[FB Ads Scraper] Injected into page context');
-  
+
   let results = [];
   let isRunning = false;
 
@@ -76,7 +76,7 @@
 
     const parseDate = (m, d, y) => new Date(Number(y), monthMap[m], Number(d));
     const formatDate = d => {
-      const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const m = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       return `${m[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     };
 
@@ -160,7 +160,8 @@
         if (!href) continue;
 
         const unwrapped = unwrapFacebookRedirect(href);
-        if (unwrapped.startsWith("https://www.facebook.com/help/396404120401278/list")) {
+        if (unwrapped.startsWith("https://www.facebook.com/help/396404120401278/list") ||
+          unwrapped.includes("transparency.meta.com/policies")) {
           continue;
         }
 
@@ -316,7 +317,7 @@
       const campaigns = logCampaignsWithTop5AdsAndText(results);
 
       console.log('[FB Ads Scraper] Complete! Sending data...');
-      
+
       // Send data to visualizer
       window.postMessage({
         type: 'FB_ADS_DATA',
