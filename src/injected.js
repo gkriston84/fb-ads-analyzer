@@ -155,6 +155,29 @@
       const seenLinkKeys = new Set();
       const links = [];
 
+      // Extract Media (Video or Image)
+      let mediaType = null;
+      let mediaSrc = null;
+
+      // 1. Check for video
+      const video = card.querySelector('video');
+      if (video && video.src) {
+        mediaType = 'video';
+        mediaSrc = video.src;
+      } else {
+        // 2. Check for images (skip first one as it's the profile pic)
+        const images = Array.from(card.querySelectorAll('img'));
+        if (images.length > 1) {
+          mediaType = 'image';
+          mediaSrc = images[1].src;
+        } else if (images.length === 1 && !el.innerText.includes("Library ID:")) {
+          // Fallback if only 1 image and it's not likely the small icon near ID (heuristic)
+          // But usually first image is profile. Safe to default to null if only 1 found?
+          // Let's stick to the rule: "The first one is the profile... so we should skip that".
+          // So if length < 2, no ad image.
+        }
+      }
+
       for (const a of anchors) {
         const href = a.href;
         if (!href) continue;
@@ -172,7 +195,7 @@
         if (!key || seenLinkKeys.has(key)) continue;
 
         seenLinkKeys.add(key);
-        links.push(cleaned);
+        links.push({ url: cleaned, mediaType, mediaSrc });
       }
 
       return { adText, links };
@@ -232,7 +255,11 @@
       const duration = Number(ad.duration) || 0;
       const copy = typeof ad.adText === "string" ? ad.adText.trim() : "";
 
-      for (const url of ad.links) {
+      for (const linkObj of ad.links) {
+        const url = linkObj.url;
+        const mediaType = linkObj.mediaType;
+        const mediaSrc = linkObj.mediaSrc;
+
         if (!campaigns.has(url)) {
           campaigns.set(url, {
             url,
@@ -273,7 +300,10 @@
             startingDate: ad.startingDate,
             endDate: ad.endDate,
             duration,
-            adText: copy
+            adText: copy,
+            // Prioritize storing video if available, else new image, else keep existing
+            mediaType: mediaType || (existing ? existing.mediaType : null),
+            mediaSrc: mediaSrc || (existing ? existing.mediaSrc : null)
           });
         }
       }

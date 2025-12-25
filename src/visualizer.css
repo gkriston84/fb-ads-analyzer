@@ -488,6 +488,18 @@
   gap: 16px;
 }
 
+.fb-ads-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .fb-ads-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .fb-ads-text-label {
   font-size: 14px;
   font-weight: 600;

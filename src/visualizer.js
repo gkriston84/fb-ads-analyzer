@@ -391,6 +391,7 @@
           ${campaign.top5 && campaign.top5.length > 0 ? `
             <div class="fb-ads-text-ads">
               <div class="fb-ads-text-label">Top 5 Ads</div>
+              <div class="fb-ads-grid">
               ${campaign.top5.map(ad => `
                 <div class="fb-ads-text-ad">
                   <div class="fb-ads-text-ad-header">
@@ -406,11 +407,16 @@
                     <strong>Duration:</strong> ${ad.duration} days
                   </div>
                   <div class="fb-ads-text-ad-copy">
+                    ${ad.mediaType === 'video'
+          ? `<div style="margin-bottom: 8px;"><video src="${ad.mediaSrc}" controls style="max-width: 100%; height: auto; border-radius: 4px;"></video></div>`
+          : (ad.mediaType === 'image' ? `<div style="margin-bottom: 8px;"><img src="${ad.mediaSrc}" style="max-width: 100%; height: auto; border-radius: 4px;"></div>` : '')
+        }
                     <strong>Ad Copy:</strong><br>
                     ${ad.adText || '[no copy]'}
                   </div>
                 </div>
               `).join('')}
+              </div>
             </div>
           ` : '<div class="fb-ads-text-no-ads">No top ads data available</div>'}
         </div>
@@ -683,6 +689,10 @@
                 </div>
               </div>
               <div class="fb-ads-ad-copy-section">
+                ${ad.mediaType === 'video'
+          ? `<div class="fb-ads-ad-image" style="margin-bottom: 12px; text-align: center;"><video src="${ad.mediaSrc}" controls style="max-width: 100%; max-height: 300px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></video></div>`
+          : (ad.mediaType === 'image' ? `<div class="fb-ads-ad-image" style="margin-bottom: 12px; text-align: center;"><img src="${ad.mediaSrc}" style="max-width: 100%; max-height: 300px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>` : '')
+        }
                 <div class="fb-ads-ad-copy-header">
                   <div class="fb-ads-ad-copy-label">Ad Copy</div>
                   <button class="fb-ads-copy-btn" data-copy-text="${encodeURIComponent(ad.adText || '')}">
