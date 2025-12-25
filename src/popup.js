@@ -173,8 +173,33 @@ async function startAnalysis() {
 
         showStatus('✅ Analysis started! Check the Facebook page...', 'success');
 
+        // Fetch AI settings from Firestore
+        let aiConfig = null;
+        try {
+            console.log('[Popup] Fetching AI settings. Auth User:', auth.currentUser ? auth.currentUser.uid : 'null');
+            const { db } = await import('./firebaseConfig.js');
+            const { doc, getDoc } = await import('firebase/firestore');
+            const docRef = doc(db, "settings", "config");
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                aiConfig = docSnap.data();
+                console.log('[Popup] ✅ Successfully fetched AI settings:', {
+                    hasApiKey: !!aiConfig.apiKey,
+                    hasPrompt: !!aiConfig.systemPrompt
+                });
+            } else {
+                console.warn('[Popup] ⚠️ No AI settings found in Firestore (settings/config). AI features will be disabled.');
+            }
+        } catch (err) {
+            console.error('[Popup] ❌ Error fetching AI settings:', err);
+        }
+
         // Send message to content script to start scraping and show visualizer
-        chrome.tabs.sendMessage(tab.id, { action: 'startScraping' }, (response) => {
+        chrome.tabs.sendMessage(tab.id, {
+            action: 'startScraping',
+            aiConfig: aiConfig
+        }, (response) => {
             if (chrome.runtime.lastError) {
                 console.error('[Popup] Error:', chrome.runtime.lastError);
                 showStatus('❌ Error: Refresh the Facebook page and try again', 'error');
@@ -194,31 +219,36 @@ async function startAnalysis() {
     }
 }
 
-async function importData(e) {
-    const file = e.target.files[0];
+async function importData(event) {
+    const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (event) => {
+    reader.onload = async (e) => {
         try {
-            const data = JSON.parse(event.target.result);
-
-            if (!data.campaigns || !Array.isArray(data.campaigns)) {
-                showStatus('❌ Invalid data format. Expected campaigns array.', 'error');
+            const json = JSON.parse(e.target.result);
+            // Validate structure
+            if (!json.campaigns) {
+                showStatus('❌ Invalid file format (missing campaigns)', 'error');
                 return;
             }
 
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-            showStatus(`✅ Loading ${data.campaigns.length} campaigns...`, 'success');
+            // Check if we are on a valid page (technically import can work anywhere if we inject, 
+            // but effectively we usually just want it on FB or any page where we inject the visualizer)
+            // For now, let's assume we allow it anywhere or strict to FB.
+            // User said "works from the modal" implying they are on the page.
 
-            // Send message to inject visualizer and load data
+            if (!tab) return;
+
+            // Ensure visualizer is injected first?
+            // Sending message 'importData' to content script
             chrome.tabs.sendMessage(tab.id, {
-                action: 'loadData',
-                data: data
+                action: 'importData',
+                data: json
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error('[Popup] Error:', chrome.runtime.lastError);
                     showStatus('❌ Error: Refresh the page and try again', 'error');
                     return;
                 }
@@ -237,7 +267,7 @@ async function importData(e) {
     reader.readAsText(file);
 
     // Reset file input
-    e.target.value = '';
+    event.target.value = '';
 }
 
 function showStatus(text, type) {

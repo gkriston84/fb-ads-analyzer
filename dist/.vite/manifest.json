@@ -1,16 +1,22 @@
 {
   "../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-Ca1GpUcf.js",
+    "file": "assets/crx-manifest.js-X2a5XuJ7.js",
     "name": "crx-manifest.js",
     "src": "../../@crx/manifest",
     "isEntry": true
   },
-  "_popup-BJXvhGf_.js": {
-    "file": "assets/popup-BJXvhGf_.js",
+  "_popup-9tWP0U15.js": {
+    "file": "assets/popup-9tWP0U15.js",
     "name": "popup"
   },
+  "src/background.js": {
+    "file": "assets/background.js-CgG_-46o.js",
+    "name": "background.js",
+    "src": "src/background.js",
+    "isEntry": true
+  },
   "src/content.js": {
-    "file": "assets/content.js-WPU6hEMy.js",
+    "file": "assets/content.js-OZnbQWuX.js",
     "name": "content.js",
     "src": "src/content.js",
     "isEntry": true
@@ -22,12 +28,12 @@
     "isEntry": true
   },
   "src/popup.html": {
-    "file": "assets/popup.html-DgxgNDw3.js",
+    "file": "assets/popup.html-Dyt6n8Tu.js",
     "name": "popup.html",
     "src": "src/popup.html",
     "isEntry": true,
     "imports": [
-      "_popup-BJXvhGf_.js"
+      "_popup-9tWP0U15.js"
     ]
   },
   "src/visualizer.js": {

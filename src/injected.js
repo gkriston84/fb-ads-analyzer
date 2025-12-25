@@ -8,58 +8,59 @@
   // Auto-scroll function
   function autoScroller() {
     return new Promise((resolve) => {
-      const CONFIG = {
-        scrollStep: 600,
-        scrollDelay: 400,
-        maxIdleCycles: 20,
-        debug: true
-      };
+      console.log('[FB Ads Scraper] Starting auto-scroll...');
 
-      let lastHeight = 0;
-      let idleCycles = 0;
+      let lastHeight = document.body.scrollHeight;
+      let noChangeCount = 0;
 
-      const log = (...args) =>
-        CONFIG.debug && console.log('[AutoScroll]', ...args);
+      const startTime = Date.now();
 
-      const scrollToAbsoluteBottom = () => {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: 'smooth'
-        });
-        log('Final scroll to absolute bottom');
-      };
-
-      const scrollLoop = async () => {
-        window.scrollBy(0, CONFIG.scrollStep);
-        await new Promise(r => setTimeout(r, CONFIG.scrollDelay));
-
-        const currentHeight =
-          document.documentElement.scrollHeight || document.body.scrollHeight;
-
-        if (currentHeight > lastHeight) {
-          lastHeight = currentHeight;
-          idleCycles = 0;
-          log('New content detected');
-          scrollLoop();
-        } else {
-          idleCycles++;
-          log(`No new content (${idleCycles}/${CONFIG.maxIdleCycles})`);
-
-          if (idleCycles < CONFIG.maxIdleCycles) {
-            scrollLoop();
-          } else {
-            log('Scrolling complete');
-            scrollToAbsoluteBottom();
-            setTimeout(() => resolve(), 1000);
+      const updateStatus = (count, done = false) => {
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        document.dispatchEvent(new CustomEvent('fbAdsStatus', {
+          detail: {
+            scrolling: !done,
+            adsFound: count,
+            elapsed: elapsed,
+            message: done ? `Analysis Complete (${elapsed}s)` : `Analyzing... (${elapsed}s)`
           }
-        }
+        }));
       };
 
-      lastHeight =
-        document.documentElement.scrollHeight || document.body.scrollHeight;
+      const timer = setInterval(() => {
+        window.scrollTo(0, document.body.scrollHeight);
 
-      log('Starting infinite auto-scroll');
-      scrollLoop();
+        // Count unique ads
+        const links = document.querySelectorAll('a[href*="/ads/library/?id="]');
+        let uniqueCount = 0;
+        const seen = new Set();
+        links.forEach(l => {
+          const m = l.href.match(/id=(\d+)/);
+          if (m && !seen.has(m[1])) {
+            seen.add(m[1]);
+            uniqueCount++;
+          }
+        });
+
+        // Update status bar
+        updateStatus(uniqueCount);
+
+        const newHeight = document.body.scrollHeight;
+        if (newHeight === lastHeight) {
+          noChangeCount++;
+        } else {
+          noChangeCount = 0;
+          lastHeight = newHeight;
+        }
+
+        // Stop if no new content for ~3 seconds (6 checks * 500ms)
+        if (noChangeCount >= 6) {
+          clearInterval(timer);
+          updateStatus(uniqueCount, true);
+          console.log('[FB Ads Scraper] Auto-scroll finished. Ads found:', uniqueCount);
+          resolve();
+        }
+      }, 500);
     });
   }
 
@@ -82,9 +83,9 @@
 
     const libIdRe = /\bLibrary ID:\s*(\d+)\b/;
     const dateRangeRe =
-      /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})\s*[-–—]\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})/i;
+      /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})\s*,\s*(\d{4})\s*[-–—]\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})\s*,\s*(\d{4})/i;
     const startedRunningRe =
-      /\bStarted running on\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(\d{1,2}),\s+(\d{4})/i;
+      /\bStarted running on\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})\s*,\s*(\d{4})/i;
 
     const extractLibraryId = text => text?.match(libIdRe)?.[1] ?? null;
 
@@ -346,14 +347,24 @@
       console.log('[FB Ads Scraper] Step 3: Processing campaigns...');
       const campaigns = logCampaignsWithTop5AdsAndText(results);
 
+      // Extract metadata
+      const advertiserName = document.querySelector('input[placeholder*="Search by"]')?.value?.trim() ||
+        document.querySelector('h1')?.innerText?.trim() ||
+        'unknown-advertiser';
+
       console.log('[FB Ads Scraper] Complete! Sending data...');
 
       // Send data to visualizer
-      window.postMessage({
-        type: 'FB_ADS_DATA',
-        data: campaigns,
-        allAds: results
-      }, '*');
+      document.dispatchEvent(new CustomEvent('fbAdsImportData', {
+        detail: {
+          campaigns: campaigns,
+          allAds: results,
+          metadata: {
+            advertiserName,
+            scrapedAt: new Date().toISOString()
+          }
+        }
+      }));
 
     } catch (error) {
       console.error('[FB Ads Scraper] Error:', error);
@@ -367,7 +378,22 @@
   }
 
   // Expose to window for manual trigger if needed
-  window.fbAdsAnalyzer = { runFullAnalysis, results };
+  window.fbAdsAnalyzer = {
+    runFullAnalysis,
+    results,
+    restart: () => {
+      console.log('[FB Ads Scraper] Soft restarting...');
+      window.scrollTo(0, 0);
+      isRunning = false;
+      results = [];
+      setTimeout(runFullAnalysis, 500);
+    }
+  };
+
+  // Listen for restart request from visualizer
+  document.addEventListener('fbAdsRestart', () => {
+    window.fbAdsAnalyzer.restart();
+  });
 
   // Auto-start when injected
   runFullAnalysis();

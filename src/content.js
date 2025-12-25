@@ -5,9 +5,9 @@ console.log('[FB Ads Analyzer] Content script loaded');
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'startScraping') {
     console.log('[FB Ads Analyzer] Starting scraping process');
-    injectScraperAndVisualizer();
+    injectScraperAndVisualizer(request.aiConfig);
     sendResponse({ status: 'started' });
-  } else if (request.action === 'loadData') {
+  } else if (request.action === 'loadData' || request.action === 'importData') {
     console.log('[FB Ads Analyzer] Loading imported data');
     injectVisualizerWithData(request.data);
     sendResponse({ status: 'loaded' });
@@ -24,14 +24,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+// Listen for analysis requests from visualizer (to proxy through background)
+document.addEventListener('fbAdsAnalyzeRequest', (e) => {
+  const { apiKey, systemPrompt, userContent } = e.detail;
+
+  console.log('[FB Ads Analyzer] Proxying AI request to background');
+
+  chrome.runtime.sendMessage({
+    action: 'analyzeAI',
+    payload: { apiKey, systemPrompt, userContent }
+  }, (response) => {
+    // Dispatch response back to visualizer
+    const event = new CustomEvent('fbAdsAnalyzeResponse', {
+      detail: response
+    });
+    document.dispatchEvent(event);
+  });
+});
+
 // Inject both scraper and visualizer into the page context
-function injectScraperAndVisualizer() {
+function injectScraperAndVisualizer(aiConfig) {
   // Check if already exists
-  // const existingOverlay = document.getElementById('fbAdsAnalyzerOverlay');
-  // if (existingOverlay) {
-  //   console.log('[FB Ads Analyzer] Already running');
-  //   return;
-  // }
+  const existingOverlay = document.getElementById('fbAdsAnalyzerOverlay');
+  if (existingOverlay) {
+    console.log('[FB Ads Analyzer] Already running, restarting analysis...');
+
+    // Dispatch restart event handled by injected.js
+    document.dispatchEvent(new CustomEvent('fbAdsRestart'));
+
+    // Also ensure we update AI config
+    if (aiConfig) {
+      setTimeout(() => {
+        const event = new CustomEvent('fbAdsConfig', { detail: aiConfig });
+        document.dispatchEvent(event);
+      }, 500);
+    }
+    return;
+  }
 
   // Inject the scraper
   const scraperScript = document.createElement('script');
@@ -54,6 +83,15 @@ function injectScraperAndVisualizer() {
   styleLink.rel = 'stylesheet';
   styleLink.href = chrome.runtime.getURL('src/visualizer.css');
   (document.head || document.documentElement).appendChild(styleLink);
+
+  // Send AI Config if available
+  if (aiConfig) {
+    // Wait slightly for visualizer to load listeners
+    setTimeout(() => {
+      const event = new CustomEvent('fbAdsConfig', { detail: aiConfig });
+      document.dispatchEvent(event);
+    }, 500);
+  }
 }
 
 // Inject visualizer and send imported data
