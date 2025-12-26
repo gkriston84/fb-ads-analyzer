@@ -31,7 +31,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content.js-VbXiJfwF.js"
+        "assets/content.js-B93U2_5C.js"
       ],
       "matches": [
         "<all_urls>"
@@ -48,7 +48,8 @@
         "src/injected.js",
         "src/visualizer.js",
         "src/visualizer.css",
-        "assets/content.js-VbXiJfwF.js"
+        "logo.jpg",
+        "assets/content.js-B93U2_5C.js"
       ],
       "use_dynamic_url": false
     }

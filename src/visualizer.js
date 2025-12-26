@@ -33,6 +33,10 @@
     return '#8b5cf6';                   // Purple
   }
 
+  // Get logo URL from config element (set by content.js)
+  const configEl = document.getElementById('fbAdsConfig');
+  const logoUrl = configEl?.dataset?.logoUrl || '';
+
   // Create the floating overlay
   const overlay = document.createElement('div');
   overlay.id = 'fbAdsAnalyzerOverlay';
@@ -40,7 +44,9 @@
   overlay.innerHTML = `
       <div class="fb-ads-minimized-bar" id="fbAdsMinimizedBar">
         <div class="fb-ads-mini-content">
-          <div class="fb-ads-mini-icon">🎯</div>
+          <div class="fb-ads-mini-icon">
+            <img src="${logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+          </div>
           <div class="fb-ads-mini-text">Facebook Ads Campaign Analyzer</div>
         </div>
         <div class="fb-ads-mini-actions">
@@ -52,7 +58,9 @@
         <div class="fb-ads-analyzer-panel">
           <div class="fb-ads-analyzer-header">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <div style="font-size: 24px;">🎯</div>
+              <div style="font-size: 24px;">
+                <img src="${logoUrl}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
+              </div>
               <div>
                 <h1>Facebook Ads Campaign Analyzer</h1>
                 <p id="fbAdsSubtitle">Timeline & Campaign Analysis</p>
@@ -84,8 +92,9 @@
                 </div>
                 
                 <div class="fb-ads-control-group">
-                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsDownloadBtn" style="background: #8b5cf6;">💾 Download Data</button>
-                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsImportBtn" style="background: #eab308; color: black;">📂 Import Data</button>
+                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsRestartBtn">🔄 Restart Analysis</button>
+                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsDownloadBtn">💾 Download Data</button>
+                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsImportBtn">📂 Import Data</button>
                     <input type="file" id="fbAdsImportInput" style="display: none;" accept=".json">
                 </div>
             </div>
@@ -150,6 +159,25 @@
 
   // Main Actions
 
+
+  // Main Actions
+  document.getElementById('fbAdsRestartBtn').addEventListener('click', () => {
+    if (confirm('Restart analysis? This will clear current data.')) {
+      // Clear local state
+      state.rawCampaigns = [];
+      state.allAds = [];
+      state.isImported = false;
+
+      // Dispatch restart event
+      document.dispatchEvent(new CustomEvent('fbAdsRestart'));
+
+      // Reset UI immediately
+      const chartContent = document.getElementById('fbAdsChartContent');
+      chartContent.innerHTML = '';
+      document.getElementById('fbAdsStatusText').textContent = 'Restarting...';
+      document.getElementById('fbAdsSpinner').style.display = 'block';
+    }
+  });
 
   document.getElementById('fbAdsDownloadBtn').addEventListener('click', downloadData);
   document.getElementById('fbAdsImportBtn').addEventListener('click', () => {
@@ -398,6 +426,7 @@
 
   function renderTimeline() {
     const chartContent = document.getElementById('fbAdsChartContent');
+    chartContent.classList.remove('fb-ads-bg-gray');
     chartContent.innerHTML = '';
 
     const campaignsToRender = processData(state.rawCampaigns);
@@ -579,6 +608,7 @@
 
   function renderTop5Text() {
     const chartContent = document.getElementById('fbAdsChartContent');
+    chartContent.classList.add('fb-ads-bg-gray');
     const subtitle = document.getElementById('fbAdsSubtitle');
     subtitle.textContent = `Top 5 ads for ${state.rawCampaigns.length} campaigns`;
 
@@ -595,7 +625,7 @@
       const color = getAdCountColor(campaign.adsCount);
 
       output += `
-        <div class="fb-ads-text-campaign" style="border-left: 4px solid ${color};">
+        <div class="fb-ads-text-campaign fb-ads-card-white" style="border-left: 4px solid ${color};">
           <div class="fb-ads-text-header">
             <strong>${campaign.url}</strong>
           </div>
@@ -641,23 +671,44 @@
     });
 
     chartContent.innerHTML = `
-      <div class="fb-ads-text-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+      <div class="fb-ads-text-actions" style="margin-top: 15px; margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
         ${state.aiConfig ? `
-        <button id="fbAdsAnalyzeBtn" class="fb-ads-btn fb-ads-btn-action" style="background: linear-gradient(to right, #10b981, #059669);">
+        <button id="fbAdsAnalyzeBtn" class="fb-ads-btn fb-ads-btn-action">
           🤖 Analyze with AI
-        </button>` : ''}
-        <button id="fbAdsCopyAllTextBtn" class="fb-ads-btn fb-ads-btn-action">
-          📋 Copy All Text
-        </button>
+        </button>` : ''
+      }
+    <button id="fbAdsCopyAllTextBtn" class="fb-ads-btn fb-ads-btn-action">
+      📋 Copy All Text
+    </button>
       </div>
-       <div id="fbAdsAIResult" style="display: none; margin-bottom: 20px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; white-space: pre-wrap;"></div>
+       <div id="fbAdsAIResult" style="display: none; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
+          <div class="fb-ads-ai-header" style="padding: 12px 16px; background: #dcfce7; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #bbf7d0;">
+            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🤖 AI Analysis</div>
+            <button class="fb-ads-ai-minimize" style="background: none; border: none; font-size: 18px; color: #166534; cursor: pointer; line-height: 1;">−</button>
+          </div>
+          <div class="fb-ads-ai-content" style="padding: 16px; white-space: pre-wrap;"></div>
+       </div>
       <div class="fb-ads-text-output">${output}</div>
     `;
+
+    // Toggle minimize
+    const aiHeader = chartContent.querySelector('.fb-ads-ai-header');
+    const aiContent = chartContent.querySelector('.fb-ads-ai-content');
+    const minimizeBtn = chartContent.querySelector('.fb-ads-ai-minimize');
+
+    if (aiHeader) {
+      aiHeader.addEventListener('click', () => {
+        const isHidden = aiContent.style.display === 'none';
+        aiContent.style.display = isHidden ? 'block' : 'none';
+        minimizeBtn.textContent = isHidden ? '−' : '+';
+      });
+    }
 
     // Restore AI Result if exists
     const resultDiv = document.getElementById('fbAdsAIResult');
     if (state.aiAnalysisResult) {
-      resultDiv.innerHTML = `<strong>🤖 AI Analysis:</strong><br><br>${state.aiAnalysisResult}`;
+      const contentDiv = resultDiv.querySelector('.fb-ads-ai-content');
+      contentDiv.innerHTML = state.aiAnalysisResult;
       resultDiv.style.display = 'block';
     }
 
@@ -710,12 +761,12 @@
   function openCampaignDetails(campaign) {
     if (!campaign.top5 || campaign.top5.length === 0) return;
 
-    let content = `<div class="fb-ads-list">`;
+    let content = `< div class="fb-ads-list" > `;
 
     campaign.top5.forEach((ad, index) => {
       const formatDate = (dateStr) => new Date(dateStr).toDateString();
       content += `
-          <div class="fb-ads-card">
+      < div class="fb-ads-card fb-ads-card-white" >
               <div class="fb-ads-ad-header">
                 <div class="fb-ads-ad-rank">
                    <div class="fb-ads-rank-number">#${index + 1}</div>
@@ -751,12 +802,12 @@
                 </div>
                 <div class="fb-ads-ad-copy">${ad.adText || '[No copy available]'}</div>
               </div>
-          </div>
-       `;
+          </div >
+      `;
     });
 
-    content += `</div>`;
-    showModal(content, `${campaign.url}`, `${campaign.adsCount} total ads • ${campaign.campaignDurationDays} days active`);
+    content += `</div > `;
+    showModal(content, `${campaign.url} `, `${campaign.adsCount} total ads • ${campaign.campaignDurationDays} days active`);
   }
 
   // --- Data Management ---
@@ -782,14 +833,14 @@
     // Helper for date formatting like "jan-1-2025"
     const formatDate = (d) => {
       const m = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-      return `${m[d.getMonth()]}-${d.getDate()}-${d.getFullYear()}`;
+      return `${m[d.getMonth()]} -${d.getDate()} -${d.getFullYear()} `;
     };
 
     const startStr = formatDate(minDate);
     const endStr = formatDate(maxDate);
 
     // Filename: peng-joon-fb-ads-8-campaigns-from-jan-1-2025-to-dec-24-2025.json
-    const filename = `${advertiser}-fb-ads-${count}-campaigns-from-${startStr}-to-${endStr}.json`;
+    const filename = `${advertiser} -fb - ads - ${count} -campaigns - from - ${startStr} -to - ${endStr}.json`;
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       campaigns: state.rawCampaigns,
@@ -912,7 +963,7 @@
         // but innerHTML preserves basic formatting mostly.
         const formatted = response.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         state.aiAnalysisResult = formatted; // Save state
-        resultDiv.innerHTML = `<strong>🤖 AI Analysis:</strong><br><br>${formatted}`;
+        resultDiv.innerHTML = `< strong >🤖 AI Analysis:</strong > <br><br>${formatted}`;
         resultDiv.style.display = 'block';
       } else {
         const errorMsg = response ? (response.error || 'Unknown error') : 'Unknown error';
@@ -997,14 +1048,14 @@
         const style = document.createElement('style');
         style.id = 'fbAdsMiniSpinnerStyle';
         style.textContent = `
-                @keyframes fbAdsSpin { 100% { transform: rotate(360deg); } }
-                .fb-ads-mini-spinner { display: inline-block; animation: fbAdsSpin 1s linear infinite; }
-            `;
+      @keyframes fbAdsSpin {100 % { transform: rotate(360deg); }}
+      .fb-ads-mini-spinner {display: inline-block; animation: fbAdsSpin 1s linear infinite; }
+      `;
         document.head.appendChild(style);
       }
     } else {
       // Done
-      icon.innerHTML = '🎯';
+      icon.innerHTML = `<img src="${logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">`;
       text.textContent = 'Analysis Ready!';
       minBar.style.background = ''; // Revert to default blue/purple
       btn.style.display = 'block';

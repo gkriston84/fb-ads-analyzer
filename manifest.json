@@ -43,7 +43,8 @@
       "resources": [
         "src/injected.js",
         "src/visualizer.js",
-        "src/visualizer.css"
+        "src/visualizer.css",
+        "logo.jpg"
       ],
       "matches": [
         "<all_urls>"

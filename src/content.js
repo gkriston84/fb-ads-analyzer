@@ -62,6 +62,16 @@ function injectScraperAndVisualizer(aiConfig) {
     return;
   }
 
+  // Inject configuration via data attribute (CSP-compliant)
+  let configEl = document.getElementById('fbAdsConfig');
+  if (!configEl) {
+    configEl = document.createElement('div');
+    configEl.id = 'fbAdsConfig';
+    configEl.style.display = 'none';
+    document.body.appendChild(configEl);
+  }
+  configEl.dataset.logoUrl = chrome.runtime.getURL('logo.jpg');
+
   // Inject the scraper
   const scraperScript = document.createElement('script');
   scraperScript.src = chrome.runtime.getURL('src/injected.js');
@@ -113,6 +123,16 @@ function injectVisualizerWithData(data, aiConfig) {
     }
     return;
   }
+
+  // Inject configuration via data attribute (CSP-compliant)
+  let configEl = document.getElementById('fbAdsConfig');
+  if (!configEl) {
+    configEl = document.createElement('div');
+    configEl.id = 'fbAdsConfig';
+    configEl.style.display = 'none';
+    document.body.appendChild(configEl);
+  }
+  configEl.dataset.logoUrl = chrome.runtime.getURL('logo.jpg');
 
   // Store data in DOM for visualizer to pick up (CSP-compliant)
   const dataContainer = document.createElement('div');
