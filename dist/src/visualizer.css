@@ -312,15 +312,19 @@
 }
 
 /* Timeline View Styles */
+/* Timeline View Styles */
 .fb-ads-timeline-header {
   display: flex;
   margin-bottom: 16px;
-  padding-bottom: 8px;
+  padding-bottom: 0;
+  /* Removed padding so lines touch the border */
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   background: white;
   z-index: 100;
+  align-items: flex-end;
+  /* Align labels to bottom if needed, or stick to top */
 }
 
 .fb-ads-global-grid {
@@ -358,13 +362,15 @@
   width: 300px;
   flex-shrink: 0;
   font-size: 14px;
-  margin-top: 3px;
+  padding-bottom: 4px;
+  /* text alignment */
 }
 
 .fb-ads-timeline-grid {
   flex: 1;
   position: relative;
-  height: 40px;
+  height: 24px;
+  /* Reduced height by approx half */
 }
 
 .fb-ads-month-marker {
@@ -372,6 +378,7 @@
   top: 0;
   height: 100%;
   border-left: 1px solid #d1d5db;
+  /* Line touches bottom because height is 100% of grid and header has no padding-bottom */
 }
 
 .fb-ads-month-label {
@@ -380,6 +387,7 @@
   color: #6b7280;
   margin-top: 4px;
   margin-left: 6px;
+
 }
 
 .fb-ads-campaign-row {

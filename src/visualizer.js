@@ -460,12 +460,12 @@
     const renderMin = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
 
     // Calculate right-side bound (End of the month of the maxDate)
-    const endOfMaxDateMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+    const endOfMaxDateMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0, 23, 59, 59, 999);
     // Use padding normally, but don't exceed end of that month by much (maybe allow hitting the last day)
     // Actually user wants "until the current month only".
     // So if maxDate is Nov, we shouldn't show Jan. 
     // Simply clamping to endOfMaxDateMonth seems correct for "current month only".
-    const renderMax = new Date(Math.min(maxDate.getTime() + padding, endOfMaxDateMonth.getTime() + dayMs)); // +1 day buffer
+    const renderMax = new Date(Math.min(maxDate.getTime() + padding, endOfMaxDateMonth.getTime()));
     const totalDuration = renderMax - renderMin;
 
     // Header
