@@ -28,12 +28,19 @@ const authError = document.getElementById('authError');
 const mainContent = document.getElementById('mainContent');
 
 // Auth State Listener
-onAuthStateChanged(auth, (user) => {
+// Auth State Listener
+import { onIdTokenChanged } from 'firebase/auth';
+
+onIdTokenChanged(auth, async (user) => {
     if (user) {
         // User is signed in
+        const token = await user.getIdToken();
+        await chrome.storage.local.set({ fbAdsIdToken: token });
+        console.log('[Popup] ID Token saved');
         showMainContent(user);
     } else {
         // No user is signed in
+        await chrome.storage.local.remove('fbAdsIdToken');
         showAuthForm();
     }
 });
@@ -388,6 +395,8 @@ async function fetchAIConfig() {
 
         if (docSnap.exists()) {
             aiConfig = docSnap.data();
+            // Remove API key from client-side config, we use backend now
+            if (aiConfig) delete aiConfig.apiKey;
         } else {
             console.warn('[Popup] ⚠️ No AI settings found.');
         }

@@ -5,18 +5,18 @@
     "src": "../../@crx/manifest",
     "isEntry": true
   },
-  "_popup-D5yF_uDh.js": {
-    "file": "assets/popup-D5yF_uDh.js",
+  "_popup-Cr10P0XK.js": {
+    "file": "assets/popup-Cr10P0XK.js",
     "name": "popup"
   },
   "src/background.js": {
-    "file": "assets/background.js-CgG_-46o.js",
+    "file": "assets/background.js-I7sshEaM.js",
     "name": "background.js",
     "src": "src/background.js",
     "isEntry": true
   },
   "src/content.js": {
-    "file": "assets/content.js-D3_4hvUM.js",
+    "file": "assets/content.js-D3HfTx9X.js",
     "name": "content.js",
     "src": "src/content.js",
     "isEntry": true
@@ -28,12 +28,12 @@
     "isEntry": true
   },
   "src/popup.html": {
-    "file": "assets/popup.html-w_TYbF4x.js",
+    "file": "assets/popup.html-DqvKt5LF.js",
     "name": "popup.html",
     "src": "src/popup.html",
     "isEntry": true,
     "imports": [
-      "_popup-D5yF_uDh.js"
+      "_popup-Cr10P0XK.js"
     ]
   },
   "src/visualizer.js": {

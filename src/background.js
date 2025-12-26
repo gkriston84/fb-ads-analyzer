@@ -8,35 +8,48 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
+// TODO: Replace with your actual Cloud Function URL after deployment
+// Example: https://us-central1-fb-ads-analyzer.cloudfunctions.net/analyzeAds
+const CLOUD_FUNCTION_URL = 'https://us-central1-fb-ads-analyzer.cloudfunctions.net/analyzeAds';
+
 async function handleAIAnalysis(request, sendResponse) {
     try {
-        console.log('[Background] Starting AI Analysis...');
-        const { apiKey, systemPrompt, userContent } = request.payload;
+        console.log('[Background] Starting AI Analysis via Cloud Function...');
+        const { systemPrompt, userContent } = request.payload;
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Get Auth Token
+        const storage = await chrome.storage.local.get('fbAdsIdToken');
+        const token = storage.fbAdsIdToken;
+
+        if (!token) {
+            throw new Error('User not authenticated. Please open the extension popup to refresh login.');
+        }
+
+        const response = await fetch(CLOUD_FUNCTION_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userContent }
-                ]
+                systemPrompt,
+                userContent
             })
         });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server Error: ${response.status} - ${errorText}`);
+        }
 
         const data = await response.json();
 
         if (data.error) {
-            throw new Error(data.error.message);
+            throw new Error(data.error);
         }
 
-        const analysis = data.choices[0].message.content;
         console.log('[Background] AI Analysis successful');
-        sendResponse({ success: true, analysis: analysis });
+        sendResponse({ success: true, analysis: data.analysis });
 
     } catch (error) {
         console.error('[Background] AI Analysis failed:', error);

@@ -31,7 +31,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content.js-D3_4hvUM.js"
+        "assets/content.js-D3HfTx9X.js"
       ],
       "matches": [
         "<all_urls>"
@@ -49,7 +49,7 @@
         "src/visualizer.js",
         "src/visualizer.css",
         "logo.jpg",
-        "assets/content.js-D3_4hvUM.js"
+        "assets/content.js-D3HfTx9X.js"
       ],
       "use_dynamic_url": false
     }

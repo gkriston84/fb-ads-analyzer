@@ -1,0 +1,20 @@
+[debug] [2025-12-26T18:42:19.163Z] ----------------------------------------------------------------------
+[debug] [2025-12-26T18:42:19.167Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\doxa8\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2025-12-26T18:42:19.167Z] CLI Version:   15.1.0
+[debug] [2025-12-26T18:42:19.167Z] Platform:      win32
+[debug] [2025-12-26T18:42:19.168Z] Node Version:  v20.13.1
+[debug] [2025-12-26T18:42:19.168Z] Time:          Fri Dec 26 2025 19:42:19 GMT+0100 (Central European Standard Time)
+[debug] [2025-12-26T18:42:19.168Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Cannot understand what targets to deploy/serve. No targets in firebase.json match '--only functions'. If you are using PowerShell make sure you place quotes around any comma-separated lists (ex: --only "functions,firestore").
+[debug] [2025-12-26T18:42:22.035Z] Error: EBUSY: resource busy or locked, unlink 'C:\Dev\FB Ads Analyzer\functions\firebase-debug.log'
+    at Object.unlinkSync (node:fs:1877:11)
+    at process.<anonymous> (C:\Users\doxa8\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js:44:16)
+    at process.emit (node:events:531:35)
+    at process.exit (node:internal/process/per_thread:185:15)
+    at Timeout._onTimeout (C:\Users\doxa8\AppData\Roaming\npm\node_modules\firebase-tools\lib\errorOut.js:20:17)
+    at listOnTimeout (node:internal/timers:573:17)
+    at process.processTimers (node:internal/timers:514:7)
+[error] 
+[error] Error: An unexpected error has occurred.

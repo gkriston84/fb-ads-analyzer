@@ -934,7 +934,8 @@
     const btn = document.getElementById('fbAdsAnalyzeBtn');
     const resultDiv = document.getElementById('fbAdsAIResult');
 
-    if (!state.aiConfig || !state.aiConfig.apiKey) {
+    // Check if configuration exists (even if no apiKey locally)
+    if (!state.aiConfig) {
       alert('AI Configuration missing. Please check database settings.');
       return;
     }
@@ -1012,7 +1013,6 @@
     console.log('[FB Ads Visualizer] Dispatching AI analysis request');
     document.dispatchEvent(new CustomEvent('fbAdsAnalyzeRequest', {
       detail: {
-        apiKey: state.aiConfig.apiKey,
         systemPrompt: systemPrompt,
         userContent: userContent
       }

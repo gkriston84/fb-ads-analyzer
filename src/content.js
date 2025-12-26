@@ -26,13 +26,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Listen for analysis requests from visualizer (to proxy through background)
 document.addEventListener('fbAdsAnalyzeRequest', (e) => {
-  const { apiKey, systemPrompt, userContent } = e.detail;
+  const { systemPrompt, userContent } = e.detail;
 
   console.log('[FB Ads Analyzer] Proxying AI request to background');
 
   chrome.runtime.sendMessage({
     action: 'analyzeAI',
-    payload: { apiKey, systemPrompt, userContent }
+    payload: { systemPrompt, userContent }
   }, (response) => {
     // Dispatch response back to visualizer
     const event = new CustomEvent('fbAdsAnalyzeResponse', {
