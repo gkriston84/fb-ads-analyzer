@@ -63,7 +63,7 @@
                 <img src="${logoUrl}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
               </div>
               <div>
-                <h1>Facebook Ads Campaign Analyzer</h1>
+                <h1>Facebook Ads Campaign Analyzer <span style="font-size: 14px; font-weight: normal; color: #6b7280;">by <a href="https://wizard.funnel.expert" target="_blank" style="color: #6b7280; text-decoration: none;">Funnel Wizard</a></span></h1>
                 <p id="fbAdsSubtitle">Timeline & Campaign Analysis</p>
               </div>
             </div>

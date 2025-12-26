@@ -323,8 +323,8 @@
   top: 0;
   background: white;
   z-index: 100;
-  align-items: flex-end;
   /* Align labels to bottom if needed, or stick to top */
+  align-items: center;
 }
 
 .fb-ads-global-grid {
@@ -362,8 +362,8 @@
   width: 300px;
   flex-shrink: 0;
   font-size: 14px;
-  padding-bottom: 4px;
-  /* text alignment */
+  font-size: 14px;
+  /* padding-bottom removed for center alignment */
 }
 
 .fb-ads-timeline-grid {
@@ -379,16 +379,19 @@
   height: 100%;
   border-left: 1px solid #d1d5db;
   /* Line touches bottom because height is 100% of grid and header has no padding-bottom */
+  display: flex;
+  align-items: center;
 }
 
 .fb-ads-month-label {
   font-size: 11px;
   font-weight: 500;
   color: #6b7280;
-  margin-top: 4px;
   margin-left: 6px;
-
+  /* margin-top removed for vertical centering */
 }
+
+
 
 .fb-ads-campaign-row {
   display: flex;
