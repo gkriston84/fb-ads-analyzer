@@ -1,10 +1,17 @@
-import { auth } from './firebaseConfig.js';
+import { auth, db } from './firebaseConfig.js';
 import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged
 } from 'firebase/auth';
+import {
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    serverTimestamp
+} from 'firebase/firestore';
 
 console.log('[Popup] Loaded');
 
@@ -13,6 +20,8 @@ const authSection = document.getElementById('authSection');
 const loginForm = document.getElementById('loginForm');
 const userProfile = document.getElementById('userProfile');
 const userEmailSpan = document.getElementById('userEmail');
+const userTierSpan = document.getElementById('userTier');
+const userUsageSpan = document.getElementById('userUsage');
 const emailInput = document.getElementById('emailInput');
 const passwordInput = document.getElementById('passwordInput');
 const authError = document.getElementById('authError');
@@ -34,6 +43,84 @@ function showMainContent(user) {
     userProfile.style.display = 'block';
     userEmailSpan.textContent = user.email;
     mainContent.style.display = 'block';
+
+    // Load User Profile & Stats
+    loadUserProfile(user.uid);
+}
+
+async function loadUserProfile(uid) {
+    try {
+        const { profile } = await getUserProfile(uid);
+        updateUIStats(profile);
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+function updateUIStats(profile) {
+    if (!userTierSpan || !userUsageSpan) return;
+
+    const tierName = profile.tier === 'pro' ? 'Pro' : 'Starter';
+    const limit = profile.tier === 'pro' ? 'Unlimited' : '10';
+
+    userTierSpan.textContent = tierName;
+    userUsageSpan.textContent = `${profile.runsCount} / ${limit}`;
+
+    if (profile.tier === 'starter' && profile.runsCount >= 10) {
+        userUsageSpan.style.color = '#ef4444'; // Red
+    } else {
+        userUsageSpan.style.color = '#6b7280';
+    }
+}
+
+// Check limits and increment usage
+async function checkAndIncrementUsage(uid) {
+    const { ref, profile } = await getUserProfile(uid);
+    const currentMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+    let newCount = profile.runsCount;
+    let newMonth = profile.lastRunMonth;
+
+    // Reset if new month
+    if (profile.lastRunMonth !== currentMonth) {
+        newCount = 0;
+        newMonth = currentMonth;
+        // Optionally update immediately or just use these values for the check
+    }
+
+    // Check Limit
+    if (profile.tier === 'starter' && newCount >= 10) {
+        return { allowed: false, message: 'Monthly limit reached (10 runs). Upgrade to Pro for unlimited access.' };
+    }
+
+    // Increment
+    await updateDoc(ref, {
+        runsCount: newCount + 1,
+        lastRunMonth: newMonth
+    });
+
+    // Return updated allowed status and tier
+    return { allowed: true, tier: profile.tier };
+}
+
+async function getUserProfile(uid) {
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+        return { ref: userRef, profile: userSnap.data() };
+    } else {
+        // Create default profile
+        const defaultProfile = {
+            email: auth.currentUser.email,
+            tier: 'starter',
+            runsCount: 0,
+            lastRunMonth: new Date().toISOString().slice(0, 7),
+            createdAt: serverTimestamp()
+        };
+        await setDoc(userRef, defaultProfile);
+        return { ref: userRef, profile: defaultProfile };
+    }
 }
 
 function showAuthForm() {
@@ -180,10 +267,32 @@ async function startAnalysis() {
             return;
         }
 
+        // Check usage limits
+        const user = auth.currentUser;
+        if (!user) {
+            showStatus('❌ Please login first', 'error');
+            return;
+        }
+
+        showStatus('⏳ Checking plan limits...', 'warning');
+
+        const result = await checkAndIncrementUsage(user.uid);
+
+        if (!result.allowed) {
+            showStatus('❌ ' + result.message, 'error');
+            return;
+        }
+
         showStatus('✅ Analysis started! Check the Facebook page...', 'success');
 
-        // Fetch AI settings from Firestore
-        const aiConfig = await fetchAIConfig();
+        // Fetch AI settings but ONLY pass if Pro
+        let aiConfig = await fetchAIConfig();
+
+        if (result.tier !== 'pro') {
+            console.log('[Popup] User is STARTER tier. AI features disabled.');
+            // Disable AI config for the visualizer
+            aiConfig = null;
+        }
 
         // Send message to content script to start scraping and show visualizer
         chrome.tabs.sendMessage(tab.id, {
