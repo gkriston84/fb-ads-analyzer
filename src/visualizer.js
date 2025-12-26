@@ -9,6 +9,7 @@
     processedCampaigns: [],
     allAds: [],
     filterDomain: 'all',
+    filterText: '',
     filterSort: 'recent', // 'recent', 'duration', 'ads'
     groupByDomain: false,
     isMinimized: true,
@@ -73,7 +74,7 @@
           </div>
           
           <div class="fb-ads-controls">
-            <div class="fb-ads-control-row" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 12px;">
+            <div class="fb-ads-control-row" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div class="fb-ads-control-group">
                   <span style="font-weight: 500; font-size: 13px; color: #374151;">View:</span>
                   <button class="fb-ads-btn fb-ads-btn-outline active" data-view="timeline">📊 Timeline</button>
@@ -81,18 +82,18 @@
                 </div>
 
                  <div class="fb-ads-control-group">
-                  <span style="font-weight: 500; font-size: 13px; color: #374151;">Sort by:</span>
+                  <span style="font-weight: 500; font-size: 13px; color: #374151;">Sort:</span>
                   <button class="fb-ads-btn fb-ads-btn-outline active" data-sort="recent">Start Date</button>
                   <button class="fb-ads-btn fb-ads-btn-outline" data-sort="duration">Duration</button>
                   <button class="fb-ads-btn fb-ads-btn-outline" data-sort="ads"># of Ads</button>
+                  <button class="fb-ads-btn fb-ads-btn-outline" id="fbAdsGroupDomainBtn" title="Group campaigns by domain">📂 Group by Domain</button>
                 </div>
 
-                <div class="fb-ads-control-group">
-                   <button class="fb-ads-btn fb-ads-btn-outline" id="fbAdsGroupDomainBtn">Group by Domain</button>
-                </div>
+                 <div class="fb-ads-control-group" style="flex: 1; max-width: 300px;">
+                   <input type="text" id="fbAdsFilterInput" class="fb-ads-input" placeholder="🔍 Filter campaigns..." style="width: 100%;">
+                 </div>
                 
-                <div class="fb-ads-control-group">
-                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsRestartBtn">🔄 Restart Analysis</button>
+                <div class="fb-ads-control-group" style="margin-left: auto;">
                     <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsDownloadBtn">💾 Download Data</button>
                     <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsImportBtn">📂 Import Data</button>
                     <input type="file" id="fbAdsImportInput" style="display: none;" accept=".json">
@@ -161,22 +162,10 @@
 
 
   // Main Actions
-  document.getElementById('fbAdsRestartBtn').addEventListener('click', () => {
-    if (confirm('Restart analysis? This will clear current data.')) {
-      // Clear local state
-      state.rawCampaigns = [];
-      state.allAds = [];
-      state.isImported = false;
-
-      // Dispatch restart event
-      document.dispatchEvent(new CustomEvent('fbAdsRestart'));
-
-      // Reset UI immediately
-      const chartContent = document.getElementById('fbAdsChartContent');
-      chartContent.innerHTML = '';
-      document.getElementById('fbAdsStatusText').textContent = 'Restarting...';
-      document.getElementById('fbAdsSpinner').style.display = 'block';
-    }
+  const filterInput = document.getElementById('fbAdsFilterInput');
+  filterInput.addEventListener('input', (e) => {
+    state.filterText = e.target.value.toLowerCase();
+    updateView();
   });
 
   document.getElementById('fbAdsDownloadBtn').addEventListener('click', downloadData);
@@ -374,10 +363,18 @@
   }
 
   function processData(campaigns) {
-    const sorted = [...campaigns];
+    let sorted = [...campaigns];
     console.log('[FB Ads Visualizer] Processing data. Sort:', state.filterSort, 'Group:', state.groupByDomain);
 
     // 1. Sorting Logic
+    // 0. Filter Logic
+    if (state.filterText) {
+      sorted = sorted.filter(c =>
+        c.url.toLowerCase().includes(state.filterText) ||
+        (c.top5 && c.top5.some(ad => ad.adText && ad.adText.toLowerCase().includes(state.filterText)))
+      );
+    }
+
     // 1. Sorting Logic
     sorted.sort((a, b) => {
       let valA, valB;
@@ -681,7 +678,7 @@
       📋 Copy All Text
     </button>
       </div>
-       <div id="fbAdsAIResult" style="display: none; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
+       <div id="fbAdsAIResult" style="display: none; padding: 12px 16px; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
           <div class="fb-ads-ai-header" style="padding: 12px 16px; background: #dcfce7; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #bbf7d0;">
             <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🤖 AI Analysis</div>
             <button class="fb-ads-ai-minimize" style="background: none; border: none; font-size: 18px; color: #166534; cursor: pointer; line-height: 1;">−</button>
@@ -761,12 +758,12 @@
   function openCampaignDetails(campaign) {
     if (!campaign.top5 || campaign.top5.length === 0) return;
 
-    let content = `< div class="fb-ads-list" > `;
+    let content = `<div class="fb-ads-list">`;
 
     campaign.top5.forEach((ad, index) => {
       const formatDate = (dateStr) => new Date(dateStr).toDateString();
       content += `
-      < div class="fb-ads-card fb-ads-card-white" >
+      <div class="fb-ads-card fb-ads-card-white">
               <div class="fb-ads-ad-header">
                 <div class="fb-ads-ad-rank">
                    <div class="fb-ads-rank-number">#${index + 1}</div>
@@ -802,11 +799,11 @@
                 </div>
                 <div class="fb-ads-ad-copy">${ad.adText || '[No copy available]'}</div>
               </div>
-          </div >
+          </div>
       `;
     });
 
-    content += `</div > `;
+    content += `</div>`;
     showModal(content, `${campaign.url} `, `${campaign.adsCount} total ads • ${campaign.campaignDurationDays} days active`);
   }
 
@@ -958,21 +955,36 @@
       const response = e.detail;
       document.removeEventListener('fbAdsAnalyzeResponse', handleResponse);
 
+      // Re-query elements to ensure we interact with the current DOM (view might have refreshed)
+      const currentResultDiv = document.getElementById('fbAdsAIResult');
+      const currentBtn = document.getElementById('fbAdsAnalyzeBtn');
+
       if (response && response.success) {
         // Markdown conversion simple replacement for bold/newlines if needed, 
         // but innerHTML preserves basic formatting mostly.
         const formatted = response.analysis.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         state.aiAnalysisResult = formatted; // Save state
-        resultDiv.innerHTML = `< strong >🤖 AI Analysis:</strong > <br><br>${formatted}`;
-        resultDiv.style.display = 'block';
+
+        if (currentResultDiv) {
+          const contentDiv = currentResultDiv.querySelector('.fb-ads-ai-content');
+          if (contentDiv) {
+            contentDiv.innerHTML = formatted;
+          } else {
+            // Fallback if structure is somehow missing
+            currentResultDiv.innerHTML = `<strong>🤖 AI Analysis:</strong> <br><br>${formatted}`;
+          }
+          currentResultDiv.style.display = 'block';
+        }
       } else {
         const errorMsg = response ? (response.error || 'Unknown error') : 'Unknown error';
         console.error('AI Analysis failed:', errorMsg);
         alert('Analysis failed: ' + errorMsg);
       }
 
-      btn.disabled = false;
-      btn.textContent = '🤖 Analyze with AI';
+      if (currentBtn) {
+        currentBtn.disabled = false;
+        currentBtn.textContent = '🤖 Analyze with AI';
+      }
     };
 
     // Listen for response
@@ -990,10 +1002,12 @@
 
     // Fallback/Timeout cleanup
     setTimeout(() => {
-      if (btn.disabled && btn.textContent === '🤖 Analyzing...') {
+      // Re-query btn for timeout check
+      const currentBtn = document.getElementById('fbAdsAnalyzeBtn');
+      if (currentBtn && currentBtn.disabled && currentBtn.textContent === '🤖 Analyzing...') {
         document.removeEventListener('fbAdsAnalyzeResponse', handleResponse);
-        btn.disabled = false;
-        btn.textContent = '🤖 Analyze with AI';
+        currentBtn.disabled = false;
+        currentBtn.textContent = '🤖 Analyze with AI';
         console.warn('[FB Ads Visualizer] AI request timed out');
       }
     }, 60000);
@@ -1040,7 +1054,7 @@
     if (scrolling) {
       icon.innerHTML = '<span class="fb-ads-mini-spinner">🔄</span>';
       text.textContent = message;
-      minBar.style.background = 'linear-gradient(to right, #f59e0b, #d97706)'; // Amber for active
+      // minBar.style.background = 'linear-gradient(to right, #f59e0b, #d97706)'; // Removed to match styling
       btn.style.display = 'none'; // Hide "Show" button while scraping
 
       // Add spinner style if not exists

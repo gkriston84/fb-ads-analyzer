@@ -45,12 +45,25 @@ document.addEventListener('fbAdsAnalyzeRequest', (e) => {
 // Inject both scraper and visualizer into the page context
 function injectScraperAndVisualizer(aiConfig) {
   // Check if already exists
+  // Check if already exists
   const existingOverlay = document.getElementById('fbAdsAnalyzerOverlay');
-  if (existingOverlay) {
-    console.log('[FB Ads Analyzer] Already running, restarting analysis...');
+  const isScraperLoaded = document.body.getAttribute('data-fb-ads-scraper-loaded') === 'true';
 
-    // Dispatch restart event handled by injected.js
-    document.dispatchEvent(new CustomEvent('fbAdsRestart'));
+  if (existingOverlay) {
+    if (isScraperLoaded) {
+      console.log('[FB Ads Analyzer] Already running, restarting analysis...');
+      // Dispatch restart event handled by injected.js
+      document.dispatchEvent(new CustomEvent('fbAdsRestart'));
+    } else {
+      console.log('[FB Ads Analyzer] Visualizer exists but scraper missing. Injecting scraper...');
+      // Inject the scraper
+      const scraperScript = document.createElement('script');
+      scraperScript.src = chrome.runtime.getURL('src/injected.js');
+      scraperScript.onload = function () {
+        this.remove();
+      };
+      (document.head || document.documentElement).appendChild(scraperScript);
+    }
 
     // Also ensure we update AI config
     if (aiConfig) {

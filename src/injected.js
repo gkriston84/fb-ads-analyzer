@@ -5,6 +5,9 @@
   let results = [];
   let isRunning = false;
 
+  // Mark scraper as loaded
+  document.body.setAttribute('data-fb-ads-scraper-loaded', 'true');
+
   // Auto-scroll function
   function autoScroller() {
     return new Promise((resolve) => {

@@ -43,8 +43,13 @@
             opacity: 0.9;
         }
 
+        .auth-box {
+            padding: 24px 24px 12px 24px;
+            text-align: center;
+        }
+
         .content {
-            padding: 24px;
+            padding: 12px 24px 24px 24px;
         }
 
         .icon {
@@ -231,7 +236,7 @@
             </div>
 
             <div id="userProfile" style="display: none;">
-                <p style="margin-bottom: 16px; color: #374151;">Logged in as <br><strong id="userEmail"></strong></p>
+                <p style="margin-bottom: 8px; color: #374151;">Logged in as <br><strong id="userEmail"></strong></p>
             </div>
         </div>
 
@@ -246,15 +251,17 @@
                     Start a new analysis or load previously exported data
                 </div>
 
-                <button class="btn btn-primary" id="startBtn">
-                    🚀 Start Analysis
-                </button>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary" id="startBtn">
+                        🚀 Start Analysis
+                    </button>
 
-                <button class="btn btn-success" id="reopenBtn" style="display: none;">
-                    📂 Reopen Last Analysis
-                </button>
+                    <button class="btn btn-success" id="reopenBtn" style="display: none;">
+                        📂 Reopen Last Analysis
+                    </button>
+                </div>
 
-                <div style="margin-top: 12px; text-align: center; color: #9ca3af; font-size: 12px;" id="orDivider">
+                <div style="margin: 16px 0; text-align: center; color: #9ca3af; font-size: 12px;" id="orDivider">
                     or
                 </div>
 
