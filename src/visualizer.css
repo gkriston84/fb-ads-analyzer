@@ -197,6 +197,7 @@
   padding: 16px 24px;
   background: white;
   border-bottom: 1px solid #e5e7eb;
+  /* Keep border as separator between filters and legend */
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
@@ -299,6 +300,8 @@
   background: white;
   padding: 24px;
   padding-top: 0;
+  position: relative;
+  /* For global grid */
 }
 
 .fb-ads-empty-state {
@@ -320,9 +323,42 @@
   z-index: 100;
 }
 
+.fb-ads-global-grid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fb-ads-grid-spacer {
+  width: 300px;
+  flex-shrink: 0;
+  /* border-right removed to avoid duplicate line */
+}
+
+.fb-ads-grid-area {
+  flex: 1;
+  position: relative;
+  height: 100%;
+}
+
+.fb-ads-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid #e5e7eb;
+  opacity: 0.5;
+}
+
 .fb-ads-timeline-label {
   width: 300px;
   flex-shrink: 0;
+  font-size: 14px;
+  margin-top: 3px;
 }
 
 .fb-ads-timeline-grid {
@@ -352,6 +388,8 @@
   padding: 8px 0;
   cursor: pointer;
   transition: background-color 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .fb-ads-campaign-row:hover {

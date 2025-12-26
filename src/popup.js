@@ -96,10 +96,17 @@ function setupEventListeners() {
 async function checkIfOnFacebook() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const startBtn = document.getElementById('startBtn');
+
         if (tab?.url?.includes('facebook.com/ads/library')) {
             console.log('[Popup] On Facebook Ads Library page');
         } else {
-            showStatus('ℹ️ Scraping only works on Facebook Ads Library. Import works anywhere!', 'warning');
+            console.log('[Popup] Not on Ads Library');
+            if (startBtn) {
+                startBtn.textContent = '🔗 Go to Ads Library';
+                // Remove primary class to indicate navigation? User didn't request style change, but text change.
+                // Keeping btn-primary is fine as it's the primary action.
+            }
         }
     } catch (error) {
         console.error('[Popup] Error checking tab:', error);
@@ -166,8 +173,10 @@ async function startAnalysis() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        if (!tab?.url?.includes('facebook.com')) {
-            showStatus('❌ Please open Facebook Ads Library', 'error');
+        if (!tab?.url?.includes('facebook.com/ads/library')) {
+            // Not on Ads Library, redirect
+            chrome.tabs.create({ url: 'https://www.facebook.com/ads/library' });
+            window.close();
             return;
         }
 

@@ -5,8 +5,8 @@
     "src": "../../@crx/manifest",
     "isEntry": true
   },
-  "_popup-BLreWCjR.js": {
-    "file": "assets/popup-BLreWCjR.js",
+  "_popup-w-WrSYDQ.js": {
+    "file": "assets/popup-w-WrSYDQ.js",
     "name": "popup"
   },
   "src/background.js": {
@@ -28,12 +28,12 @@
     "isEntry": true
   },
   "src/popup.html": {
-    "file": "assets/popup.html-n65r3-ET.js",
+    "file": "assets/popup.html-oHqnIUwx.js",
     "name": "popup.html",
     "src": "src/popup.html",
     "isEntry": true,
     "imports": [
-      "_popup-BLreWCjR.js"
+      "_popup-w-WrSYDQ.js"
     ]
   },
   "src/visualizer.js": {

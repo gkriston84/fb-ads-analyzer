@@ -74,7 +74,7 @@
           </div>
           
           <div class="fb-ads-controls">
-            <div class="fb-ads-control-row" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 12px; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="fb-ads-control-row" style="display: flex; justify-content: space-between; width: 100%; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div class="fb-ads-control-group">
                   <span style="font-weight: 500; font-size: 13px; color: #374151;">View:</span>
                   <button class="fb-ads-btn fb-ads-btn-outline active" data-view="timeline">📊 Timeline</button>
@@ -99,8 +99,9 @@
                     <input type="file" id="fbAdsImportInput" style="display: none;" accept=".json">
                 </div>
             </div>
+           </div>
 
-             <div class="fb-ads-legend" id="fbAdsTimelineLegend" style="display: flex; width: 100%; gap: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+           <div class="fb-ads-legend" id="fbAdsTimelineLegend" style="display: flex; width: 100%; gap: 16px; padding: 12px 24px; border-bottom: 1px solid #e5e7eb; background: #fafafa;">
                 <div class="fb-ads-legend-item"><div class="fb-ads-legend-color" style="background: #8b5cf6;"></div> 1-4 ads</div>
                 <div class="fb-ads-legend-item"><div class="fb-ads-legend-color" style="background: #3b82f6;"></div> 5-9 ads</div>
                 <div class="fb-ads-legend-item"><div class="fb-ads-legend-color" style="background: #22c55e;"></div> 10-19 ads</div>
@@ -108,11 +109,6 @@
                 <div class="fb-ads-legend-item"><div class="fb-ads-legend-color" style="background: #f97316;"></div> 50-99 ads</div>
                 <div class="fb-ads-legend-item"><div class="fb-ads-legend-color" style="background: #ef4444;"></div> 100+ ads</div>
             </div>
-             <div class="fb-ads-status-bar" style="border: none; padding-top: 0; padding-bottom: 0;">
-                 <div class="fb-ads-spinner" id="fbAdsSpinner"></div>
-                 <div class="fb-ads-status-text" id="fbAdsStatusText">Loading analysis data...</div>
-            </div>
-          </div>
   
           <div class="fb-ads-chart-container" id="fbAdsChartContent">
              <!-- Dynamic Content -->
@@ -456,10 +452,20 @@
     if (rangeMs < dayMs) rangeMs = dayMs;
 
     // Add padding (max of 5 days or 10% of total range)
+    // Clamp padding for right side to avoid showing future months unnecessarily
+    // Clamp padding for right side to avoid showing future months unnecessarily
     const padding = Math.max(dayMs * 5, rangeMs * 0.1);
 
-    const renderMin = new Date(minDate.getTime() - padding);
-    const renderMax = new Date(maxDate.getTime() + padding);
+    // Start from the beginning of the month of the first ad (no left padding into previous months)
+    const renderMin = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+
+    // Calculate right-side bound (End of the month of the maxDate)
+    const endOfMaxDateMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+    // Use padding normally, but don't exceed end of that month by much (maybe allow hitting the last day)
+    // Actually user wants "until the current month only".
+    // So if maxDate is Nov, we shouldn't show Jan. 
+    // Simply clamping to endOfMaxDateMonth seems correct for "current month only".
+    const renderMax = new Date(Math.min(maxDate.getTime() + padding, endOfMaxDateMonth.getTime() + dayMs)); // +1 day buffer
     const totalDuration = renderMax - renderMin;
 
     // Header
@@ -472,6 +478,7 @@
     chartContent.appendChild(header);
 
     const grid = header.querySelector('.fb-ads-timeline-grid');
+    let gridLinesHTML = '';
 
     // Adaptive Markers logic
     const isShortRange = rangeMs < (dayMs * 60);
@@ -487,6 +494,9 @@
           marker.style.left = `${pos}%`;
           marker.innerHTML = `<div class="fb-ads-month-label">${d.toLocaleString('default', { month: 'short', day: 'numeric' })}</div>`;
           grid.appendChild(marker);
+
+          // Add Grid Line
+          gridLinesHTML += `<div class="fb-ads-grid-line" style="left: ${pos}%"></div>`;
         }
         d.setDate(d.getDate() + 7);
       }
@@ -502,10 +512,26 @@
           marker.style.left = `${pos}%`;
           marker.innerHTML = `<div class="fb-ads-month-label">${d.toLocaleString('default', { month: 'short', year: '2-digit' })}</div>`;
           grid.appendChild(marker);
+
+          // Add Grid Line
+          gridLinesHTML += `<div class="fb-ads-grid-line" style="left: ${pos}%"></div>`;
         }
         d.setMonth(d.getMonth() + 1);
       }
     }
+
+    // Append Background Grid and Rows Wrapper
+    const bodyContainer = document.createElement('div');
+    bodyContainer.className = 'fb-ads-timeline-body';
+    bodyContainer.style.position = 'relative'; // Ensure grid is relative to this content height
+
+    const gridLayer = document.createElement('div');
+    gridLayer.className = 'fb-ads-global-grid';
+    gridLayer.innerHTML = `
+       <div class="fb-ads-grid-spacer"></div>
+       <div class="fb-ads-grid-area">${gridLinesHTML}</div>
+    `;
+    bodyContainer.appendChild(gridLayer);
 
     // Render Rows
     let lastDomain = null;
@@ -517,7 +543,7 @@
         const groupHeader = document.createElement('div');
         groupHeader.className = 'fb-ads-domain-header';
         groupHeader.innerHTML = `<div class="fb-ads-domain-name">${domain}</div>`;
-        chartContent.appendChild(groupHeader);
+        bodyContainer.appendChild(groupHeader);
         lastDomain = domain;
       }
 
@@ -550,10 +576,6 @@
 
       // Tooltip logic for the bar
       setTimeout(() => {
-        // We need to query the newly added row's bar. 
-        // Since we appendChild(row) later, we can attach listeners to the element 'row' before appending?
-        // Wait, the row is created via document.createElement('div') then appended.
-        // So we can find the bar inside 'row' immediately.
         const bar = row.querySelector('.fb-ads-campaign-bar');
         if (bar) {
           bar.addEventListener('mouseenter', () => {
@@ -567,7 +589,6 @@
              `;
             tooltip.style.display = 'block';
 
-            // Attach click listener to the link inside tooltip
             const viewBtn = tooltip.querySelector('#fbAdsTooltipViewBtn');
             if (viewBtn) {
               viewBtn.onclick = (e) => {
@@ -579,8 +600,6 @@
           });
 
           bar.addEventListener('mousemove', (e) => {
-            // Position tooltip near mouse but ensure it stays within viewport
-            // Add slight offset so it doesn't flicker
             const x = e.clientX + 15;
             const y = e.clientY + 15;
             tooltip.style.left = x + 'px';
@@ -594,13 +613,14 @@
       }, 0);
 
       row.addEventListener('click', (e) => {
-        // Don't open modal if clicking a link
         if (e.target.closest('a')) return;
         openCampaignDetails(campaign);
       });
 
-      chartContent.appendChild(row);
+      bodyContainer.appendChild(row);
     });
+
+    chartContent.appendChild(bodyContainer);
   }
 
   function renderTop5Text() {
@@ -678,7 +698,7 @@
       📋 Copy All Text
     </button>
       </div>
-       <div id="fbAdsAIResult" style="display: none; padding: 12px 16px; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
+       <div id="fbAdsAIResult" style="display: none; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
           <div class="fb-ads-ai-header" style="padding: 12px 16px; background: #dcfce7; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #bbf7d0;">
             <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🤖 AI Analysis</div>
             <button class="fb-ads-ai-minimize" style="background: none; border: none; font-size: 18px; color: #166534; cursor: pointer; line-height: 1;">−</button>
@@ -902,9 +922,7 @@
     // Initial Sort
     state.rawCampaigns.sort((a, b) => new Date(b.firstAdvertised) - new Date(a.firstAdvertised));
 
-    document.getElementById('fbAdsStatusText').textContent =
-      `Loaded ${state.rawCampaigns.length} campaigns`;
-    document.getElementById('fbAdsSpinner').style.display = 'none';
+
 
     updateView();
     showOverlay();
