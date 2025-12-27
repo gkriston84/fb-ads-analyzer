@@ -964,30 +964,55 @@
     btn.innerHTML = `${ICONS.ai} Analyzing...`;
     resultDiv.style.display = 'none';
 
-    // Collect all ad texts
-    let allAdTexts = [];
-    state.rawCampaigns.forEach(c => {
-      if (c.top5) {
-        c.top5.forEach(ad => {
-          if (ad.adText && ad.adText.length > 10) {
-            allAdTexts.push(ad.adText);
-          }
-        });
+    // Build structured content
+    let structuredContent = [];
+
+    // Helper for safe dates
+    const safeDate = (d) => {
+      try { return new Date(d).toLocaleDateString(); } catch (e) { return 'N/A'; }
+    };
+
+    state.rawCampaigns.forEach((c) => {
+      if (!c.top5 || c.top5.length === 0) return;
+
+      let hasValidAds = false;
+      let campaignBlock = `CAMPAIGN: ${c.url}\n`;
+      campaignBlock += `METADATA: Duration: ${c.campaignDurationDays} days | Ads Count: ${c.adsCount} | Active: ${safeDate(c.firstAdvertised)} to ${safeDate(c.lastAdvertised)}\n`;
+      campaignBlock += `TOP ADS:\n`;
+
+      c.top5.forEach((ad, index) => {
+        // Skip ads with very little text if desirable, but user asked for "all data"
+        // sticking to a basic length check to avoid empty noise
+        if (!ad.adText || ad.adText.length < 5) return;
+
+        hasValidAds = true;
+        campaignBlock += `  [Ad #${index + 1}] LibID: ${ad.libraryId} | Duration: ${ad.duration} days | Dates: ${safeDate(ad.startingDate)} - ${safeDate(ad.endDate)}\n`;
+        // Clean up newlines for compactness but keep structure
+        campaignBlock += `  TEXT: ${ad.adText.replace(/\n\s*\n/g, '\n').trim()}\n\n`;
+      });
+
+      campaignBlock += `--------------------------------------------------\n`;
+
+      if (hasValidAds) {
+        structuredContent.push(campaignBlock);
       }
     });
 
-    // Remove duplicates and limit
-    allAdTexts = [...new Set(allAdTexts)].slice(0, 50);
-
-    if (allAdTexts.length === 0) {
-      alert('No ad text content found to analyze.');
+    if (structuredContent.length === 0) {
+      alert('No valid ad content found to analyze.');
       btn.disabled = false;
       btn.innerHTML = `${ICONS.ai} Analyze with AI`;
       return;
     }
 
-    const systemPrompt = state.aiConfig.systemPrompt || "You are an expert marketing analyst. Analyze these Facebook ad copies and identify common hooks, pain points addressed, and CTAs used. Provide a concise bulleted summary of the strategy.";
-    const userContent = "Analyze the following ad copies:\n\n" + allAdTexts.join("\n\n---\n\n");
+    // Limit total length to avoid context window issues (approx 30k chars safe for most models today)
+    let finalString = structuredContent.join('\n');
+    if (finalString.length > 40000) {
+      finalString = finalString.substring(0, 40000) + "\n...[TRUNCATED DATA]";
+    }
+
+    const systemPrompt = state.aiConfig.systemPrompt || "You are an expert marketing analyst. Analyze these Facebook ad campaigns. Look for patterns in the successful ads (high duration, high count). Identify hooks, angles, and structures that are working across the timeline. Focus on the Top Ads provided for each campaign.";
+    const userContent = "Analyze the following campaign performance data:\n\n" + finalString;
 
     // Define response handler
     const handleResponse = (e) => {
@@ -1042,7 +1067,7 @@
     setTimeout(() => {
       // Re-query btn for timeout check
       const currentBtn = document.getElementById('fbAdsAnalyzeBtn');
-      if (currentBtn && currentBtn.disabled && currentBtn.textContent === '🤖 Analyzing...') {
+      if (currentBtn && currentBtn.disabled && currentBtn.innerHTML.includes('Analyzing')) {
         document.removeEventListener('fbAdsAnalyzeResponse', handleResponse);
         currentBtn.disabled = false;
         currentBtn.innerHTML = `${ICONS.ai} Analyze with AI`;
