@@ -3,7 +3,8 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import {
     doc,
@@ -171,6 +172,76 @@ function setupAuthListeners() {
             await signOut(auth);
         } catch (error) {
             console.error('Logout failed:', error);
+        }
+    });
+
+    // Show/Hide Password
+    document.getElementById('togglePasswordBtn')?.addEventListener('click', (e) => {
+        const input = document.getElementById('passwordInput');
+        const btn = e.target;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            btn.textContent = '👁️';
+        }
+    });
+
+    // Password Reset Flow
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
+    const sendResetBtn = document.getElementById('sendResetBtn');
+    const resetEmailInput = document.getElementById('resetEmailInput');
+    const resetError = document.getElementById('resetError');
+    const resetSuccess = document.getElementById('resetSuccess');
+
+    forgotPasswordLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.style.display = 'none';
+        resetPasswordForm.style.display = 'block';
+        resetError.textContent = '';
+        resetSuccess.style.display = 'none';
+        // Pre-fill email if user typed it in login
+        if (emailInput.value) resetEmailInput.value = emailInput.value;
+    });
+
+    backToLoginBtn?.addEventListener('click', () => {
+        resetPasswordForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        authError.textContent = '';
+    });
+
+    sendResetBtn?.addEventListener('click', async () => {
+        const email = resetEmailInput.value;
+        if (!email) {
+            resetError.textContent = 'Please enter your email.';
+            return;
+        }
+
+        try {
+            sendResetBtn.disabled = true;
+            sendResetBtn.textContent = 'Sending...';
+            resetError.textContent = '';
+
+            await sendPasswordResetEmail(auth, email);
+
+            resetSuccess.textContent = 'Reset link sent! Check your email.';
+            resetSuccess.style.display = 'block';
+
+            // Optional: Switch back to login after a few seconds
+            // setTimeout(() => {
+            //     backToLoginBtn.click();
+            //     showStatus('Check your email for reset link', 'success');
+            // }, 3000);
+
+        } catch (error) {
+            console.error('Reset password error:', error);
+            resetError.textContent = error.message;
+        } finally {
+            sendResetBtn.disabled = false;
+            sendResetBtn.textContent = 'Send Reset Link';
         }
     });
 }

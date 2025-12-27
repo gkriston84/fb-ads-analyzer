@@ -209,7 +209,7 @@
             margin-top: 8px;
         }
     </style>
-  <script type="module" crossorigin src="/assets/popup-Cr10P0XK.js"></script>
+  <script type="module" crossorigin src="/assets/popup-BV4VvlMn.js"></script>
 </head>
 
 <body>
@@ -230,10 +230,30 @@
 
             <div id="loginForm">
                 <input type="email" id="emailInput" placeholder="Email" class="input-field" />
-                <input type="password" id="passwordInput" placeholder="Password" class="input-field" />
+                <div style="position: relative; margin-bottom: 12px;">
+                    <input type="password" id="passwordInput" placeholder="Password" class="input-field"
+                        style="padding-right: 40px; margin-bottom: 0;" />
+                    <span id="togglePasswordBtn"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; opacity: 0.6; font-size: 16px;">👁️</span>
+                </div>
                 <button id="loginBtn" class="btn btn-primary" style="margin-bottom: 8px;">Login</button>
-                <button id="signupBtn" class="btn btn-secondary">Sign Up</button>
+                <button id="signupBtn" class="btn btn-secondary" style="margin-bottom: 8px;">Sign Up</button>
+                <div style="text-align: center;">
+                    <a href="#" id="forgotPasswordLink"
+                        style="font-size: 13px; color: #6b7280; text-decoration: none;">Forgot Password?</a>
+                </div>
                 <div id="authError" class="error-text"></div>
+            </div>
+
+            <div id="resetPasswordForm" style="display: none;">
+                <h3 style="margin-bottom: 8px; color: #111827;">Reset Password</h3>
+                <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">Enter your email to receive a reset
+                    link.</p>
+                <input type="email" id="resetEmailInput" placeholder="Email" class="input-field" />
+                <button id="sendResetBtn" class="btn btn-primary" style="margin-bottom: 8px;">Send Reset Link</button>
+                <button id="backToLoginBtn" class="btn btn-secondary">Back to Login</button>
+                <div id="resetError" class="error-text"></div>
+                <div id="resetSuccess" class="status success" style="margin-top: 8px;"></div>
             </div>
 
             <div id="userProfile" style="display: none;">
