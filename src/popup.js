@@ -140,6 +140,17 @@ function showAuthForm() {
     authError.textContent = '';
 }
 
+// Icons definition
+const ICONS = {
+    visibility: '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>',
+    visibilityOff: '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>',
+    success: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>',
+    error: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>',
+    warning: '<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>',
+    link: '<path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>',
+    refresh: '<path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>'
+};
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
@@ -178,13 +189,15 @@ function setupAuthListeners() {
     // Show/Hide Password
     document.getElementById('togglePasswordBtn')?.addEventListener('click', (e) => {
         const input = document.getElementById('passwordInput');
-        const btn = e.target;
+        const btn = e.currentTarget;
+        const svg = btn.querySelector('svg');
+
         if (input.type === 'password') {
             input.type = 'text';
-            btn.textContent = '🙈';
+            svg.innerHTML = ICONS.visibilityOff;
         } else {
             input.type = 'password';
-            btn.textContent = '👁️';
+            svg.innerHTML = ICONS.visibility;
         }
     });
 
@@ -227,14 +240,7 @@ function setupAuthListeners() {
 
             await sendPasswordResetEmail(auth, email);
 
-            resetSuccess.textContent = 'Reset link sent! Check your email.';
-            resetSuccess.style.display = 'block';
-
-            // Optional: Switch back to login after a few seconds
-            // setTimeout(() => {
-            //     backToLoginBtn.click();
-            //     showStatus('Check your email for reset link', 'success');
-            // }, 3000);
+            showStatus('Reset link sent! Check your email.', 'success', resetSuccess);
 
         } catch (error) {
             console.error('Reset password error:', error);
@@ -268,9 +274,8 @@ async function checkIfOnFacebook() {
         } else {
             console.log('[Popup] Not on Ads Library');
             if (startBtn) {
-                startBtn.textContent = '🔗 Go to Ads Library';
-                // Remove primary class to indicate navigation? User didn't request style change, but text change.
-                // Keeping btn-primary is fine as it's the primary action.
+                // Remove primary class? Maybe keep it.
+                startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">${ICONS.link}</svg> <span>Go to Ads Library</span>`;
             }
         }
     } catch (error) {
@@ -295,13 +300,13 @@ async function checkForExistingAnalysis() {
                 const description = document.getElementById('description');
                 const startBtn = document.getElementById('startBtn');
 
-                reopenBtn.style.display = 'block';
+                reopenBtn.style.display = 'flex';
                 description.textContent = 'Last analysis available! Reopen or start fresh.';
 
                 // Make Start Analysis button secondary style when reopen is available
                 startBtn.classList.remove('btn-primary');
                 startBtn.classList.add('btn-secondary');
-                startBtn.innerHTML = '🔄 Start New Analysis';
+                startBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">${ICONS.refresh}</svg> <span>Start New Analysis</span>`;
             }
         });
     } catch (error) {
@@ -313,12 +318,12 @@ async function reopenAnalysis() {
     try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        showStatus('✅ Reopening analysis...', 'success');
+        showStatus('Reopening analysis...', 'success');
 
         chrome.tabs.sendMessage(tab.id, { action: 'reopenOverlay' }, (response) => {
             if (chrome.runtime.lastError) {
                 console.error('[Popup] Error:', chrome.runtime.lastError);
-                showStatus('❌ Error: Could not reopen', 'error');
+                showStatus('Error: Could not reopen', 'error');
                 return;
             }
             console.log('[Popup] Overlay reopened:', response);
@@ -330,7 +335,7 @@ async function reopenAnalysis() {
 
     } catch (error) {
         console.error('[Popup] Error reopening analysis:', error);
-        showStatus('❌ Error: ' + error.message, 'error');
+        showStatus('Error: ' + error.message, 'error');
     }
 }
 
@@ -348,20 +353,20 @@ async function startAnalysis() {
         // Check usage limits
         const user = auth.currentUser;
         if (!user) {
-            showStatus('❌ Please login first', 'error');
+            showStatus('Please login first', 'error');
             return;
         }
 
-        showStatus('⏳ Checking plan limits...', 'warning');
+        showStatus('Checking plan limits...', 'warning');
 
         const result = await checkAndIncrementUsage(user.uid);
 
         if (!result.allowed) {
-            showStatus('❌ ' + result.message, 'error');
+            showStatus(result.message, 'error');
             return;
         }
 
-        showStatus('✅ Analysis started! Check the Facebook page...', 'success');
+        showStatus('Analysis started! Check the Facebook page...', 'success');
 
         // Fetch AI settings but ONLY pass if Pro
         let aiConfig = await fetchAIConfig();
@@ -379,7 +384,7 @@ async function startAnalysis() {
         }, (response) => {
             if (chrome.runtime.lastError) {
                 console.error('[Popup] Error:', chrome.runtime.lastError);
-                showStatus('❌ Error: Refresh the Facebook page and try again', 'error');
+                showStatus('Error: Refresh the Facebook page and try again', 'error');
                 return;
             }
             console.log('[Popup] Scraping started:', response);
@@ -392,7 +397,7 @@ async function startAnalysis() {
 
     } catch (error) {
         console.error('[Popup] Error starting analysis:', error);
-        showStatus('❌ Error: ' + error.message, 'error');
+        showStatus('Error: ' + error.message, 'error');
     }
 }
 
@@ -406,12 +411,12 @@ async function importData(event) {
             const json = JSON.parse(e.target.result);
             // Validate structure
             if (!json.campaigns) {
-                showStatus('❌ Invalid file format (missing campaigns)', 'error');
+                showStatus('Invalid file format (missing campaigns)', 'error');
                 return;
             }
 
             if (!json.campaigns) {
-                showStatus('❌ Invalid file format (missing campaigns)', 'error');
+                showStatus('Invalid file format (missing campaigns)', 'error');
                 return;
             }
 
@@ -434,7 +439,7 @@ async function importData(event) {
                 aiConfig: aiConfig
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    showStatus('❌ Error: Refresh the page and try again', 'error');
+                    showStatus('Error: Refresh the page and try again', 'error');
                     return;
                 }
                 console.log('[Popup] Data loaded:', response);
@@ -446,7 +451,7 @@ async function importData(event) {
             });
 
         } catch (err) {
-            showStatus('❌ Failed to parse JSON: ' + err.message, 'error');
+            showStatus('Failed to parse JSON: ' + err.message, 'error');
         }
     };
     reader.readAsText(file);
@@ -477,9 +482,15 @@ async function fetchAIConfig() {
     return aiConfig;
 }
 
-function showStatus(text, type) {
-    const status = document.getElementById('status');
-    status.textContent = text;
+function showStatus(text, type, element) {
+    const status = element || document.getElementById('status');
+    // Select Icon based on type
+    let iconPath = '';
+    if (type === 'success') iconPath = ICONS.success;
+    else if (type === 'error') iconPath = ICONS.error;
+    else if (type === 'warning') iconPath = ICONS.warning;
+
+    status.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">${iconPath}</svg> <span>${text}</span>`;
     status.className = 'status show ' + type;
 }
 

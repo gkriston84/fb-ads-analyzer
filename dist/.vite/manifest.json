@@ -1,22 +1,22 @@
 {
   "../../@crx/manifest": {
-    "file": "assets/crx-manifest.js-CJOsroQH.js",
+    "file": "assets/crx-manifest.js-DWitiD7K.js",
     "name": "crx-manifest.js",
     "src": "../../@crx/manifest",
     "isEntry": true
   },
-  "_popup-BV4VvlMn.js": {
-    "file": "assets/popup-BV4VvlMn.js",
+  "_popup-BZFlbtpw.js": {
+    "file": "assets/popup-BZFlbtpw.js",
     "name": "popup"
   },
   "src/background.js": {
-    "file": "assets/background.js-I7sshEaM.js",
+    "file": "assets/background.js-0ShytTy-.js",
     "name": "background.js",
     "src": "src/background.js",
     "isEntry": true
   },
   "src/content.js": {
-    "file": "assets/content.js-D3HfTx9X.js",
+    "file": "assets/content.js-BuYPyKCv.js",
     "name": "content.js",
     "src": "src/content.js",
     "isEntry": true
@@ -28,12 +28,12 @@
     "isEntry": true
   },
   "src/popup.html": {
-    "file": "assets/popup.html-C_8mr6xl.js",
+    "file": "assets/popup.html-CRivc5OP.js",
     "name": "popup.html",
     "src": "src/popup.html",
     "isEntry": true,
     "imports": [
-      "_popup-BV4VvlMn.js"
+      "_popup-BZFlbtpw.js"
     ]
   },
   "src/visualizer.js": {

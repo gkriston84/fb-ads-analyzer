@@ -3,6 +3,21 @@
 (function () {
   console.log('[FB Ads Analyzer] Visualizer script loaded');
 
+  // Icons Configuration
+  const ICONS = {
+    timeline: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2v-4h2v4zm4 0h-2v-2h2v2z"/></svg>',
+    top5: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM4 21h16v2H4zM6 7h12v2H6zM6 11h12v2H6zM6 15h8v2H6z"/></svg>',
+    folder: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>',
+    save: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>',
+    check: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+    copy: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>',
+    ai: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>',
+    refresh: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>',
+    arrowUp: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>',
+    arrowDown: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>',
+    search: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>'
+  };
+
   // State Management
   const state = {
     rawCampaigns: [],
@@ -77,8 +92,8 @@
             <div class="fb-ads-control-row" style="display: flex; justify-content: space-between; width: 100%; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div class="fb-ads-control-group">
                   <span style="font-weight: 500; font-size: 13px; color: #374151;">View:</span>
-                  <button class="fb-ads-btn fb-ads-btn-outline active" data-view="timeline">📊 Timeline</button>
-                  <button class="fb-ads-btn fb-ads-btn-outline" data-view="top5-text">🏆 Top 5 Text</button>
+                  <button class="fb-ads-btn fb-ads-btn-outline active" data-view="timeline">${ICONS.timeline} Timeline</button>
+                  <button class="fb-ads-btn fb-ads-btn-outline" data-view="top5-text">${ICONS.top5} Top 5 Text</button>
                 </div>
 
                  <div class="fb-ads-control-group">
@@ -86,16 +101,16 @@
                   <button class="fb-ads-btn fb-ads-btn-outline active" data-sort="recent">Start Date</button>
                   <button class="fb-ads-btn fb-ads-btn-outline" data-sort="duration">Duration</button>
                   <button class="fb-ads-btn fb-ads-btn-outline" data-sort="ads"># of Ads</button>
-                  <button class="fb-ads-btn fb-ads-btn-outline" id="fbAdsGroupDomainBtn" title="Group campaigns by domain">📂 Group by Domain</button>
+                  <button class="fb-ads-btn fb-ads-btn-outline" id="fbAdsGroupDomainBtn" title="Group campaigns by domain">${ICONS.folder} Group by Domain</button>
                 </div>
 
                  <div class="fb-ads-control-group" style="flex: 1; max-width: 300px;">
-                   <input type="text" id="fbAdsFilterInput" class="fb-ads-input" placeholder="🔍 Filter campaigns..." style="width: 100%;">
+                   <input type="text" id="fbAdsFilterInput" class="fb-ads-input" placeholder="Filter campaigns..." style="width: 100%;">
                  </div>
                 
                 <div class="fb-ads-control-group" style="margin-left: auto;">
-                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsDownloadBtn">💾 Download Data</button>
-                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsImportBtn">📂 Import Data</button>
+                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsDownloadBtn">${ICONS.save} Download Data</button>
+                    <button class="fb-ads-btn fb-ads-btn-action" id="fbAdsImportBtn">${ICONS.folder} Import Data</button>
                     <input type="file" id="fbAdsImportInput" style="display: none;" accept=".json">
                 </div>
             </div>
@@ -196,16 +211,21 @@
   const updateSortButtons = () => {
     sortButtons.forEach(btn => {
       const sortType = btn.getAttribute('data-sort');
-      let label = btn.innerText.replace(/ [↑↓]/, ''); // Clean existing arrow
+      let baseLabel = '';
+      if (sortType === 'recent') baseLabel = 'Start Date';
+      if (sortType === 'duration') baseLabel = 'Duration';
+      if (sortType === 'ads') baseLabel = '# of Ads';
+
+      let inner = baseLabel;
 
       if (state.filterSort === sortType) {
         btn.classList.add('active');
         // Add arrow
-        label += state.sortDirection === 'asc' ? ' ↑' : ' ↓';
+        inner += state.sortDirection === 'asc' ? ` ${ICONS.arrowUp}` : ` ${ICONS.arrowDown}`;
       } else {
         btn.classList.remove('active');
       }
-      btn.innerText = label;
+      btn.innerHTML = inner;
     });
   };
 
@@ -340,7 +360,7 @@
         copyRichText(plainText, richText);
 
         const original = target.innerHTML;
-        target.innerHTML = '✅ Copied!';
+        target.innerHTML = `${ICONS.check} Copied!`;
         target.classList.add('success');
         setTimeout(() => {
           target.innerHTML = original;
@@ -691,16 +711,16 @@
       <div class="fb-ads-text-actions" style="margin-top: 15px; margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
         ${state.aiConfig ? `
         <button id="fbAdsAnalyzeBtn" class="fb-ads-btn fb-ads-btn-action">
-          🤖 Analyze with AI
+          ${ICONS.ai} Analyze with AI
         </button>` : ''
       }
     <button id="fbAdsCopyAllTextBtn" class="fb-ads-btn fb-ads-btn-action">
-      📋 Copy All Text
+      ${ICONS.copy} Copy All Text
     </button>
       </div>
        <div id="fbAdsAIResult" style="display: none; margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; overflow: hidden;">
           <div class="fb-ads-ai-header" style="padding: 12px 16px; background: #dcfce7; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #bbf7d0;">
-            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">🤖 AI Analysis</div>
+            <div style="font-weight: 600; display: flex; align-items: center; gap: 8px;">${ICONS.ai} AI Analysis</div>
             <button class="fb-ads-ai-minimize" style="background: none; border: none; font-size: 18px; color: #166534; cursor: pointer; line-height: 1;">−</button>
           </div>
           <div class="fb-ads-ai-content" style="padding: 16px; white-space: pre-wrap;"></div>
@@ -757,10 +777,10 @@
         document.execCommand('copy');
 
         const btn = document.getElementById('fbAdsCopyAllTextBtn');
-        const originalText = btn.textContent;
-        btn.textContent = '✅ Copied!';
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `${ICONS.check} Copied!`;
         setTimeout(() => {
-          btn.textContent = originalText;
+          btn.innerHTML = originalText;
         }, 2000);
       } catch (err) {
         console.error('Copy failed:', err);
@@ -814,7 +834,7 @@
                     data-ad-duration="${ad.duration}"
                     data-ad-dates="${formatDate(ad.startingDate)} — ${formatDate(ad.endDate)}"
                   >
-                    📋 Copy
+                    ${ICONS.copy} Copy
                   </button>
                 </div>
                 <div class="fb-ads-ad-copy">${ad.adText || '[No copy available]'}</div>
@@ -941,7 +961,7 @@
     }
 
     btn.disabled = true;
-    btn.textContent = '🤖 Analyzing...';
+    btn.innerHTML = `${ICONS.ai} Analyzing...`;
     resultDiv.style.display = 'none';
 
     // Collect all ad texts
@@ -962,7 +982,7 @@
     if (allAdTexts.length === 0) {
       alert('No ad text content found to analyze.');
       btn.disabled = false;
-      btn.textContent = '🤖 Analyze with AI';
+      btn.innerHTML = `${ICONS.ai} Analyze with AI`;
       return;
     }
 
@@ -990,7 +1010,7 @@
             contentDiv.innerHTML = formatted;
           } else {
             // Fallback if structure is somehow missing
-            currentResultDiv.innerHTML = `<strong>🤖 AI Analysis:</strong> <br><br>${formatted}`;
+            currentResultDiv.innerHTML = `<strong>${ICONS.ai} AI Analysis:</strong> <br><br>${formatted}`;
           }
           currentResultDiv.style.display = 'block';
         }
@@ -1002,7 +1022,7 @@
 
       if (currentBtn) {
         currentBtn.disabled = false;
-        currentBtn.textContent = '🤖 Analyze with AI';
+        currentBtn.innerHTML = `${ICONS.ai} Analyze with AI`;
       }
     };
 
@@ -1025,7 +1045,7 @@
       if (currentBtn && currentBtn.disabled && currentBtn.textContent === '🤖 Analyzing...') {
         document.removeEventListener('fbAdsAnalyzeResponse', handleResponse);
         currentBtn.disabled = false;
-        currentBtn.textContent = '🤖 Analyze with AI';
+        currentBtn.innerHTML = `${ICONS.ai} Analyze with AI`;
         console.warn('[FB Ads Visualizer] AI request timed out');
       }
     }, 60000);
@@ -1070,7 +1090,7 @@
     const btn = document.getElementById('fbAdsMaximizeBtn');
 
     if (scrolling) {
-      icon.innerHTML = '<span class="fb-ads-mini-spinner">🔄</span>';
+      icon.innerHTML = `<span class="fb-ads-mini-spinner">${ICONS.refresh}</span>`;
       text.textContent = message;
       // minBar.style.background = 'linear-gradient(to right, #f59e0b, #d97706)'; // Removed to match styling
       btn.style.display = 'none'; // Hide "Show" button while scraping
@@ -1082,6 +1102,7 @@
         style.textContent = `
       @keyframes fbAdsSpin {100 % { transform: rotate(360deg); }}
       .fb-ads-mini-spinner {display: inline-block; animation: fbAdsSpin 1s linear infinite; }
+      .fb-ads-mini-spinner svg { width: 20px; height: 20px; }
       `;
         document.head.appendChild(style);
       }

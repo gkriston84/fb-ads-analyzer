@@ -59,6 +59,7 @@
 
 .fb-ads-mini-icon {
   font-size: 20px;
+  display: flex;
 }
 
 .fb-ads-mini-text {
